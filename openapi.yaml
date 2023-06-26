@@ -1,93 +1,239 @@
 openapi: 3.0.1
 info:
-  title: TODO Plugin
-  description: A plugin that allows the user to create and manage a TODO list using ChatGPT. If you do not know the user's username, ask them first before making queries to the plugin. Otherwise, use the username "global".
-  version: 'v1'
+   title: Debug Plugin
+   description: A plugin that allows ChatGPT to access and modify files on your computer for debugging purposes.
+   version: 'v1'
 servers:
-  - url: http://localhost:5003
+   -  url: http://localhost:5003
 paths:
-  /todos/{username}:
-    get:
-      operationId: getTodos
-      summary: Get the list of todos
-      parameters:
-      - in: path
-        name: username
-        schema:
-            type: string
+  /execute:
+    post:
+      operationId: execute_command
+      requestBody:
         required: true
-        description: The name of the user.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/executeCommandRequest'
       responses:
-        "200":
-          description: OK
+        '200':
+          description: Command executed successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/getTodosResponse'
+                $ref: '#/components/schemas/executeCommandResponse'
+        '400':
+          description: Error occurred while executing command
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/executeCommandErrorResponse'
+  /run_script:
     post:
-      operationId: addTodo
-      summary: Add a todo to the list
-      parameters:
-      - in: path
-        name: username
-        schema:
-            type: string
-        required: true
-        description: The name of the user.
+      operationId: run_script
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/addTodoRequest'
+              $ref: '#/components/schemas/runScriptRequest'
       responses:
-        "200":
-          description: OK
-    delete:
-      operationId: deleteTodo
-      summary: Delete a todo from the list
+        '200':
+          description: Script ran successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/runScriptResponse'
+        '400':
+          description: Error occurred while running script
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/runScriptErrorResponse'
+  /files/{filename}:
+    get:
+      operationId: get_file
       parameters:
-      - in: path
-        name: username
-        schema:
-            type: string
+      - name: filename
+        in: path
         required: true
-        description: The name of the user.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: File content retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/getFileResponse'
+        '404':
+          description: File not found
+    post:
+      operationId: modify_file
+      parameters:
+      - name: filename
+        in: path
+        required: true
+        schema:
+          type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/deleteTodoRequest'
+              $ref: '#/components/schemas/modifyFileRequest'
       responses:
-        "200":
-          description: OK
-
+        '200':
+          description: File modified successfully
+  /initialize:
+    post:
+      operationId: initialize_plugin
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/initializePluginRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/initializePluginResponse'
+        '400':
+          description: Error during initialization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/initializePluginResponse'
+  /install_packages:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/installPackagesRequest'
+      responses:
+        '200':
+          description: Packages installed successfully
+        '400':
+          description: Error occurred while installing packages
 components:
   schemas:
-    getTodosResponse:
+    executeCommandRequest:
+      type: object
+      required:
+      - command
+      properties:
+        command:
+          type: string
+          description: The command to execute.
+        env_name:
+          type: string
+          description: The name of the environment (optional).
+    executeCommandResponse:
       type: object
       properties:
-        todos:
+        output:
+          type: string
+          description: The output of the command.
+    executeCommandErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message.
+        output:
+          type: string
+          description: The output of the command before it failed.
+    runScriptRequest:
+      type: object
+      required:
+      - env_name
+      - script_path
+      properties:
+        env_name:
+          type: string
+          description: The name of the environment.
+        script_path:
+          type: string
+          description: The path to the Python script.
+    runScriptResponse:
+      type: object
+      properties:
+        output:
+          type: string
+          description: The output of the script.
+    runScriptErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error message.
+        output:
+          type: string
+          description: The output of the script before it failed.
+    getFileResponse:
+      type: object
+      properties:
+        content:
+          type: string
+          description: The content of the file.
+    modifyFileRequest:
+      type: object
+      required:
+        - fixes
+      properties:
+        fixes:
           type: array
           items:
-            type: string
-          description: The list of todos.
-    addTodoRequest:
+            type: object
+            required:
+              - lines
+              - code
+              - indentation
+            properties:
+              lines:
+                type: array
+                items:
+                  type: integer
+                minItems: 2
+                maxItems: 2
+              code:
+                type: string
+              indentation:
+                type: string
+    modifyFileResponse:
       type: object
-      required:
-      - todo
       properties:
-        todo:
+        message:
           type: string
-          description: The todo to add to the list.
-          required: true
-    deleteTodoRequest:
+          description: The status of the file modification.
+    initializePluginResponse:
       type: object
-      required:
-      - todo_idx
       properties:
-        todo_idx:
-          type: integer
-          description: The index of the todo to delete.
-          required: true
+        message:
+          type: string
+          description: The status of the initialization.
+        instructions:
+          type: string
+          description: Detailed instructions on how to use the plugin.
+      installPackagesRequest:
+        type: object
+        properties:
+          env_name:
+            type: string
+            description: The name of the environment. If not specified, defaults to 'debuggerGPT'.
+          packages:
+            type: array
+            items:
+              type: string
+            description: The list of Python packages to install.
+      initializePluginRequest:
+        type: object
+        properties:
+          env_name:
+            type: string
+            description: The name of the environment to create or use.
