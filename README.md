@@ -1,39 +1,25 @@
-# ChatGPT plugins quickstart
+# Python Code Debugger Plugin
 
-Get a todo list ChatGPT plugin up and running in under 5 minutes using Python. This plugin is designed to work in conjunction with the [ChatGPT plugins documentation](https://platform.openai.com/docs/plugins). If you do not already have plugin developer access, please [join the waitlist](https://openai.com/waitlist/plugins).
+## Description
+This plugin allows ChatGPT to debug Python code files, manage Python environments, and manipulate files on your computer. It can retrieve and modify files, execute shell commands, create new Python environments, and run Python scripts within specific environments.
 
-## Setup locally
+## Installation
+1. Clone this repository to your local machine.
+2. Navigate to the cloned repository in your terminal.
+3. Install the required Python packages by running `pip install -r requirements.txt`.
+4. Start the server by running `python main.py`.
 
-To install the required packages for this plugin, run the following command:
+## Usage
+Before using the plugin, you need to initialize it by sending a POST request to the `/initialize` endpoint. This ensures that the conda environment 'debuggerGPT' is set up for running scripts.
 
-```bash
-pip install -r requirements.txt
-```
+Here are the main capabilities of the plugin:
 
-To run the plugin, enter the following command:
+1. **Execute Shell Commands**: You can execute a shell command by sending a POST request to the `/execute` endpoint with the command as a string in the request body. If you want to run the command in a specific environment, include the 'env_name' in your request.
 
-```bash
-python main.py
-```
+2. **Run Python Scripts**: You can run a Python script in a specific environment by sending a POST request to the `/run_script` endpoint with the path to the script and the name of the environment in the request body.
 
-Once the local server is running:
+3. **Modify Files**: You can modify a file by sending a POST request to the `/files/{filename}` endpoint with the new content of the file in the request body.
 
-1. Navigate to https://chat.openai.com. 
-2. In the Model drop down, select "Plugins" (note, if you don't see it there, you don't have access yet).
-3. Select "Plugin store"
-4. Select "Develop your own plugin"
-5. Enter in `localhost:5003` since this is the URL the server is running on locally, then select "Find manifest file".
+4. **Install Python Packages**: You can install Python packages in a specific environment by sending a POST request to the `/install_packages` endpoint with the name of the environment and a list of packages in the request body.
 
-The plugin should now be installed and enabled! You can start with a question like "What is on my todo list" and then try adding something to it as well! 
-
-## Setup remotely
-
-### Cloudflare workers
-
-### Code Sandbox
-
-### Replit
-
-## Getting help
-
-If you run into issues or have questions building a plugin, please join our [Developer community forum](https://community.openai.com/c/chat-plugins/20).
+5. **Debug Code**: To debug a code, run the code, examine the output and error messages, decide how to fix the code, and then use the 'modify a file' command to update the code. Repeat this process until the code runs without errors.
