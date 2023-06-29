@@ -30,7 +30,7 @@ Follow these steps to set up the plugin:
 3. **Create a Python Environment**: Create a Python environment for the plugin. You can use tools like `venv` or `conda` to create a new environment. For example, if you're using `venv`, you can create a new environment using `python3 -m venv env`, and then activate it using `source env/bin/activate`.
 4. **Install Dependencies**: Install the necessary dependencies for the plugin. These dependencies are listed in the `requirements.txt` file in the repository. You can install them using `pip install -r requirements.txt`.
 5. **Start the Plugin**: Start the plugin by running the main script. You can do this by running `python main.py` in the command line.
-6. **Initialize the Plugin**: Once the plugin is running, start a conversation with ChatGPT. The first command in the conversation should be 'init'. This command initializes the plugin and sets up a new conda environment called 'debuggerGPT' for running scripts. If you want to use a different environment, you can specify the 'environ' parameter in the 'init' command.
+6. **Initialize the Plugin**: Once the plugin is running, start a conversation with ChatGPT. The first command in the conversation should be 'init debbuger'. This command initializes the plugin and sets up a new conda environment called 'debuggerGPT' for running scripts. If you want to use a different environment, you can specify the 'environ' parameter in the 'init' command.
 
 Remember, you need to initialize the plugin every time you start a new conversation with ChatGPT.
 
