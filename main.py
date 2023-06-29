@@ -35,6 +35,9 @@ memory = Memory()
 # todo: add plugin template
 # todo: check through memory, the user prompts.
 # todo: improve instructions
+# todo: add 'file not found' response where needed
+# todo: continuous shell
+
 
 @app.post("/initialize")
 async def initialize_plugin():
@@ -91,7 +94,6 @@ async def recall(key):
         return Response(response=json.dumps({"value": memory[key]}), status=200)
     else:
         return Response(response='Key not found', status=400)
-
 
 
 @app.post("/listen")
@@ -169,8 +171,10 @@ async def download_file():
     request_data = await quart.request.get_json(force=True)
     url = request_data.get("url", "")
     local_path = request_data.get("local_path", "")
+    filename = url.split("/")[-1]  # Extract the filename from the URL
+    full_path = os.path.join(local_path, filename)  # Combine the local path with the filename
     response = requests.get(url)
-    with open(local_path, 'wb') as f:
+    with open(full_path, 'wb') as f:
         f.write(response.content)
     return quart.Response(response='File downloaded successfully', status=200)
 
@@ -182,16 +186,15 @@ async def analyze_folder():
         file_dict = {}
         for root, dirs, files in os.walk(folder_path):
             file_dict[root] = files
-        # Save the folder analysis to memory
         memory.remember(folder_path, file_dict, nature='data')
-        with open('ai_instructions/analyze_code.txt', 'r') as file:
+        with open('ai_instructions/folder_analysis.txt', 'r') as file:
             instructions = file.read()
             instructions = instructions.replace('{folder_path}', os.path.basename(folder_path))
         return quart.Response(response=json.dumps({"analysis": file_dict, "instructions": instructions}), status=200)
     except Exception as e:
-        tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
-        print("".join(tb_str))  # Print the traceback
-        return quart.Response(response=json.dumps({"error": str(e)}), status=400)
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        print("".join(tb_str))
+        return quart.Response(response=json.dumps({"error": "".join(tb_str)}), status=400)
 
 
 @app.post("/execute")
@@ -238,42 +241,46 @@ async def get_file(filename):
 
 @app.post("/files/<path:filename>")
 async def edit_file(filename):
-    request_data = await quart.request.get_json(force=True)
-    filename = unquote(filename)
-    fixes = request_data.get("fixes", [])
-    method = request_data.get("method", "subs")
+    try:
+        request_data = await quart.request.get_json(force=True)
+        filename = unquote(filename)
+        fixes = request_data.get("fixes", [])
+        method = request_data.get("method", "subs")
 
-    if method == "replace" and len(fixes) != 1:
-        return quart.Response(response='Error: For "replace" method, only one fix should be provided', status=400)
+        if method == "replace" and len(fixes) != 1:
+            return quart.Response(response='Error: For "replace" method, only one fix should be provided', status=400)
 
-    with open(filename, 'r') as f:
-        lines = f.readlines()
+        with open(filename, 'r') as f:
+            lines = f.readlines()
 
-    for fix in fixes:
-        if len(fix["lines"]) == 2:
-            start_line, end_line = fix["lines"]
-        elif len(fix["lines"]) == 1:
-            start_line, end_line = fix["lines"], fix["lines"]
-        new_code = fix["code"]
-        indentation = fix["indentation"]
-        indented_code = '\n'.join([indentation + line for line in new_code.split('\n')])
+        for fix in fixes:
+            if len(fix["lines"]) == 2:
+                start_line, end_line = fix["lines"]
+            elif len(fix["lines"]) == 1:
+                start_line, end_line = fix["lines"], fix["lines"]
+            new_code = fix["code"]
+            indentation = fix["indentation"]
+            indented_code = '\n'.join([indentation + line for line in new_code.split('\n')])
 
-        if method == "subs":
-            lines[start_line - 1:end_line] = [indented_code + '\n']
-        elif method == "insert":
-            lines.insert(start_line - 1, indented_code + '\n')
-        elif method == "replace":
-            lines = [indented_code + '\n']
+            if method == "subs":
+                lines[start_line - 1:end_line] = [indented_code + '\n']
+            elif method == "insert":
+                lines.insert(start_line - 1, indented_code + '\n')
+            elif method == "replace":
+                lines = [indented_code + '\n']
 
-    with open(filename, 'w') as f:
-        f.writelines(lines)
+        with open(filename, 'w') as f:
+            f.writelines(lines)
 
-    # If the file is a Python file, refactor it
-    if filename.endswith('.py'):
-        # Assuming you have installed the 'black' Python code formatter
-        subprocess.run(['black', filename], check=True)
+        # If the file is a Python file, refactor it
+        if filename.endswith('.py'):
+            # Assuming you have installed the 'black' Python code formatter
+            subprocess.run(['black', filename], check=True)
 
-    return quart.Response(response='OK', status=200)
+        return quart.Response(response='OK', status=200)
+    except Exception as e:
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        return quart.Response(response="".join(tb_str), status=500)
 
 
 @app.get("/logo.png")

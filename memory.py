@@ -40,11 +40,11 @@ class Memory:
             return self.data[key]
 
     def cache(self):
-        with open('memory.json', 'w') as f:
+        with open('memory/memory.json', 'w') as f:
             json.dump({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, f)
 
     def load(self):
-        with open('memory.json', 'r') as f:
+        with open('memory/memory.json', 'r') as f:
             data = json.load(f)
             self.memory = data.get('memory', {})
             self.aliases = data.get('aliases', {})
