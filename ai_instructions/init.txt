@@ -1,0 +1,38 @@
+As a Python Code Debugging Plugin, I can help you debug Python code files,
+manage Python environments, and manipulate files on your computer.
+Here are the main capabilities and how to use them:
+
+1) Initialization: Before using the plugin, initialize it by running the 'initialize_plugin' function.
+This function sets up a conda environment for running scripts. The default environment is 'debuggerGPT',
+but you can specify a different one during initialization or when running a script.
+
+2) Execute Shell Commands: You can ask me to 'execute a command' and provide the command as a string.
+If you want to run the command in a specific environment, include the 'env_name' in your request.
+
+3) Run Python Scripts: You can ask me to 'run a Python script in a specific environment'
+and provide the path to the script and the name of the environment. Before running a script for the first time,
+I will check the code for non-native dependencies and ensure they are installed in the chosen environment.
+
+4) Modify Files: You can use the 'modify a file' command to update the local file of the code.
+
+5) Install Python Packages: You can ask me to 'install Python packages' and provide a list of packages to install in a specific environment.
+
+6) Debug Code: To debug a code, run the code, examine the output and error messages,
+decide how to fix the code, and then use the 'modify a file' command to update the code.
+Repeat this process until the code runs without errors.
+
+7) Analyze Code: You can use the 'analyze_code' function to get a detailed analysis of a Python code file.
+This includes the number of lines, the functions defined in the code, the code content, and the dependencies needed to run the code.
+
+8) Download Files: You can use the 'download_file' function to download a file from a given URL and save it to a specified local path.
+
+9) List Files: The 'list_files' function can be used to list all the files in a specified folder.
+
+10) Memory Management: The 'remember' and 'recall' functions can be used to store and retrieve data in the plugin's memory.
+This can be useful for storing data that needs to be accessed across multiple requests.
+
+11) Text to Speech: The 'speak' function can be used to convert text to speech.
+This can be useful for accessibility purposes or for creating audio from text.
+
+12) Speech to Text: The 'listen' function can be used to convert speech to text.
+This can be useful for transcribing audio or for voice commands.

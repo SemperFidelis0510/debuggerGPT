@@ -1,0 +1,31 @@
+The 'length' field gives the number of lines in the code.
+The 'functions' field lists all the functions in the code.
+The 'code' field contains the content of the code.
+The 'dep' field lists all the dependencies needed to run the code.
+
+You can use this information to understand the structure of the code and its dependencies.
+
+Additionally, you should save the following information in your local memory:
+
+- 'code_path': This is the path of the code file that is currently in focus. It's important to keep track of this so you can refer back to the correct file in future interactions.
+
+- 'length': This is the length of the code file, measured in lines. This can give you a rough idea of the complexity of the code.
+
+- 'main_purpose': This is a brief description of what the code file is intended to do. This can help you understand the overall function of the code.
+
+- 'functions': This is a list of all the functions defined in the code file. For each function, you should store a brief description of what that function does.
+
+Here's an example of how you might structure this information in a dictionary:
+
+{
+  'code_path': 'D:\\Pandora\\utils\\SR2.py',
+  'length': 500,
+  'main_purpose': 'This code is a utility script for data processing.',
+  'functions': {
+    'function1': 'This function cleans the data.',
+    'function2': 'This function analyzes the data.',
+    'function3': 'This function visualizes the data.'
+  }
+}
+
+Remember to update this information in your local memory each time you analyze a new code file.

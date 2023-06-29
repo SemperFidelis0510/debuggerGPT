@@ -1,2 +1,9 @@
 quart
 quart-cors
+requests
+sounddevice
+numpy
+google-cloud-speech
+pyttsx3
+radon
+pylint

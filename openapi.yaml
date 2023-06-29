@@ -1,10 +1,10 @@
 openapi: 3.0.1
 info:
-   title: Debug Plugin
-   description: A plugin that allows ChatGPT to access and modify files on your computer for debugging purposes.
-   version: 'v1'
+  title: Debug Plugin
+  description: A plugin that allows ChatGPT to access and modify files on your computer for debugging purposes.
+  version: 'v1'
 servers:
-   -  url: http://localhost:5003
+  - url: http://localhost:5003
 paths:
   /execute:
     post:
@@ -69,22 +69,39 @@ paths:
         '404':
           description: File not found
     post:
-      operationId: modify_file
+      summary: Edit a file
+      operationId: edit_file
       parameters:
-      - name: filename
-        in: path
-        required: true
-        schema:
-          type: string
+        -  name: filename
+           in: path
+           required: true
+           schema:
+             type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/modifyFileRequest'
+              $ref: '#/components/schemas/EditFileRequest'
       responses:
         '200':
-          description: File modified successfully
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /initialize:
     post:
       operationId: initialize_plugin
@@ -106,9 +123,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/initializePluginResponse'
+                $ref: '#/components/schemas/initializePluginErrorResponse'
   /install_packages:
     post:
+      operationId: install_packages
       requestBody:
         required: true
         content:
@@ -118,10 +136,204 @@ paths:
       responses:
         '200':
           description: Packages installed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/installPackagesResponse'
         '400':
           description: Error occurred while installing packages
+  /speak:
+    post:
+      operationId: speak
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/speakRequest'
+      responses:
+        '200':
+          description: Text spoken successfully
+  /memory:
+    post:
+      operationId: remember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/rememberRequest'
+      responses:
+        '200':
+          description: Memory updated successfully
+  /memory/{key}:
+    get:
+      operationId: recall
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Memory retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/recallResponse'
+        '400':
+          description: Key not found
+  /listen:
+    post:
+      operationId: listen
+      responses:
+        '200':
+          description: Transcription retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listenResponse'
+  /analyze_code:
+    get:
+      operationId: analyze_code
+      parameters:
+        -  name: code_path
+           in: query
+           required: true
+           schema:
+             type: string
+        -  name: scope_level
+           in: query
+           required: false
+           schema:
+             type: integer
+             default: 2
+             description: The level of scope for the code analysis. 1 for basic information, 2 for additional information about classes and comments, 3 for pylint output, cyclomatic complexity, and Halstead metrics.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/analyzeCodeResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /download_file:
+    post:
+      operationId: download_file
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/downloadFileRequest'
+      responses:
+        '200':
+          description: File downloaded successfully
+  /list_files:
+    get:
+      operationId: list_files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/listFilesRequest'
+      responses:
+        '200':
+          description: Files listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/listFilesResponse'
 components:
   schemas:
+    speakRequest:
+      type: object
+      required:
+      - text
+      properties:
+        text:
+          type: string
+          description: The text to speak.
+    rememberRequest:
+      type: object
+      required:
+      - key
+      - value
+      properties:
+        key:
+          type: string
+          description: The key to remember.
+        value:
+          type: string
+          description: The value to remember.
+        alias:
+          type: boolean
+          description: Whether the key is an alias.
+    recallResponse:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The value of the key.
+    listenResponse:
+      type: object
+      properties:
+        transcription:
+          type: string
+          description: The transcription of the audio.
+    analyzeCodeRequest:
+      type: object
+      required:
+        - code_path
+      properties:
+        code_path:
+          type: string
+          description: The path to the code to analyze.
+    analyzeCodeResponse:
+      type: object
+      properties:
+        analysis:
+          type: object
+          description: The analysis of the code.
+        instructions:
+          type: string
+          description: The instructions for the analysis.
+    downloadFileRequest:
+      type: object
+      required:
+      - url
+      - local_path
+      properties:
+        url:
+          type: string
+          description: The URL of the file to download.
+        local_path:
+          type: string
+          description: The local path where the file will be saved.
+    listFilesRequest:
+      type: object
+      required:
+      - folder_path
+      properties:
+        folder_path:
+          type: string
+          description: The path to the folder to list files from.
+    listFilesResponse:
+      type: object
+      properties:
+        files:
+          type: object
+          description: The files in the folder.
     executeCommandRequest:
       type: object
       required:
@@ -151,8 +363,8 @@ components:
     runScriptRequest:
       type: object
       required:
-      - env_name
-      - script_path
+        - env_name
+        - script_path
       properties:
         env_name:
           type: string
@@ -160,6 +372,11 @@ components:
         script_path:
           type: string
           description: The path to the Python script.
+        args:
+          type: array
+          items:
+            type: string
+          description: The list of arguments to pass to the script.
     runScriptResponse:
       type: object
       properties:
@@ -205,12 +422,29 @@ components:
                 type: string
               indentation:
                 type: string
-    modifyFileResponse:
+    EditFileRequest:
       type: object
+      required:
+        - fixes
+        - method
       properties:
-        message:
+        fixes:
+          type: array
+          items:
+            type: object
+            properties:
+              lines:
+                type: array
+                items:
+                  type: integer
+              code:
+                type: string
+              indentation:
+                type: string
+        method:
           type: string
-          description: The status of the file modification.
+          enum: [ subs, insert, replace ]
+          default: subs
     initializePluginResponse:
       type: object
       properties:
@@ -237,3 +471,20 @@ components:
           env_name:
             type: string
             description: The name of the environment to create or use.
+    initializePluginRequest:
+      type: object
+      properties:
+        env_name:
+          type: string
+          description: The name of the environment to create or use.
+    installPackagesRequest:
+      type: object
+      properties:
+        env_name:
+          type: string
+          description: The name of the environment. If not specified, defaults to 'debuggerGPT'.
+        packages:
+          type: array
+          items:
+            type: string
+          description: The list of Python packages to install.
