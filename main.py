@@ -245,36 +245,37 @@ async def edit_file(filename):
         request_data = await quart.request.get_json(force=True)
         filename = unquote(filename)
         fixes = request_data.get("fixes", [])
-        method = request_data.get("method", "subs")
+        method = request_data.get("method", "replace")
 
         if method == "replace" and len(fixes) != 1:
             return quart.Response(response='Error: For "replace" method, only one fix should be provided', status=400)
 
-        with open(filename, 'r') as f:
-            lines = f.readlines()
+        lines = []
+        if method != "new" and os.path.exists(filename):
+            with open(filename, 'r') as f:
+                lines = f.readlines()
 
         for fix in fixes:
             if len(fix["lines"]) == 2:
                 start_line, end_line = fix["lines"]
             elif len(fix["lines"]) == 1:
-                start_line, end_line = fix["lines"], fix["lines"]
+                start_line = end_line = fix["lines"][0]
+
             new_code = fix["code"]
             indentation = fix["indentation"]
             indented_code = '\n'.join([indentation + line for line in new_code.split('\n')])
 
-            if method == "subs":
+            if method == "replace":
                 lines[start_line - 1:end_line] = [indented_code + '\n']
             elif method == "insert":
                 lines.insert(start_line - 1, indented_code + '\n')
-            elif method == "replace":
+            elif method == "new":
                 lines = [indented_code + '\n']
 
         with open(filename, 'w') as f:
             f.writelines(lines)
 
-        # If the file is a Python file, refactor it
         if filename.endswith('.py'):
-            # Assuming you have installed the 'black' Python code formatter
             subprocess.run(['black', filename], check=True)
 
         return quart.Response(response='OK', status=200)

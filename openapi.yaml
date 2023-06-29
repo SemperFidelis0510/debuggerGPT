@@ -442,7 +442,7 @@ components:
                 type: string
         method:
           type: string
-          enum: [ subs, insert, replace ]
+          enum: [ replace, insert, new ]
           default: subs
     initializePluginResponse:
       type: object
