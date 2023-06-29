@@ -194,7 +194,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/listenResponse'
-  /analyze_code:
+  /analysis/code:
     get:
       operationId: analyze_code
       parameters:
@@ -238,22 +238,31 @@ paths:
       responses:
         '200':
           description: File downloaded successfully
-  /list_files:
+  /analysis/folder:
     get:
-      operationId: list_files
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/listFilesRequest'
+      operationId: analyze_folder
+      parameters:
+        -  name: folder_path
+           in: query
+           required: true
+           schema:
+             type: string
       responses:
         '200':
-          description: Files listed successfully
+          description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/listFilesResponse'
+                $ref: '#/components/schemas/analyzeFolderResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 components:
   schemas:
     speakRequest:
@@ -320,20 +329,23 @@ components:
         local_path:
           type: string
           description: The local path where the file will be saved.
-    listFilesRequest:
+    analyzeFolderRequest:
       type: object
       required:
-      - folder_path
+        - folder_path
       properties:
         folder_path:
           type: string
-          description: The path to the folder to list files from.
-    listFilesResponse:
+          description: The path to the folder to analyze.
+    analyzeFolderResponse:
       type: object
       properties:
-        files:
+        analysis:
           type: object
-          description: The files in the folder.
+          description: The analysis of the folder.
+        instructions:
+          type: string
+          description: The instructions for the analysis.
     executeCommandRequest:
       type: object
       required:

@@ -17,11 +17,11 @@ import traceback
 from radon.complexity import cc_visit
 from radon.metrics import h_visit
 from pylint import epylint as lint
+from memory import Memory
 
 app = quart.Quart(__name__)
 app = cors(app, allow_origin="https://chat.openai.com")
-memory = {}
-aliases = {}
+memory = Memory()
 
 
 # todo: add plan JSON.
@@ -32,6 +32,7 @@ aliases = {}
 # todo: add auth
 # todo: automate plugin improvement
 # todo: add plugin template
+# todo: check through memory, the user prompts.
 
 @app.post("/initialize")
 async def initialize_plugin():
@@ -71,10 +72,10 @@ async def remember():
     key = request_data.get("key", "")
     value = request_data.get("value", "")
     alias = request_data.get("alias", False)
+    nature = 'memory'
     if alias:
-        aliases[key] = value
-    else:
-        memory[key] = value
+        nature = 'alias'
+    memory.remember(key, value, nature=nature)
     return Response(response='OK', status=200)
 
 
@@ -83,8 +84,6 @@ async def recall(key):
     key = unquote(key)
     if key in memory:
         return Response(response=json.dumps({"value": memory[key]}), status=200)
-    elif key in aliases:
-        return Response(response=json.dumps({"value": aliases[key]}), status=200)
     else:
         return Response(response='Key not found', status=400)
 
@@ -113,7 +112,7 @@ async def listen():
         return {"transcription": result.alternatives[0].transcript}
 
 
-@app.get("/analyze_code")
+@app.get("/analysis/code")
 async def analyze_code():
     try:
         code_path = quart.request.args.get("code_path", "")
@@ -167,14 +166,23 @@ async def download_file():
     return quart.Response(response='File downloaded successfully', status=200)
 
 
-@app.get("/list_files")
-async def list_files():
-    request_data = await quart.request.get_json(force=True)
-    folder_path = request_data.get("folder_path", "")
-    file_dict = {}
-    for root, dirs, files in os.walk(folder_path):
-        file_dict[root] = files
-    return quart.Response(response=json.dumps(file_dict), status=200)
+@app.get("/analysis/folder")
+async def analyze_folder():
+    try:
+        folder_path = quart.request.args.get("folder_path", "")
+        file_dict = {}
+        for root, dirs, files in os.walk(folder_path):
+            file_dict[root] = files
+        # Save the folder analysis to memory
+        memory.remember(folder_path, file_dict, nature='data')
+        with open('ai_instructions/analyze_code.txt', 'r') as file:
+            instructions = file.read()
+            instructions = instructions.replace('{folder_path}', os.path.basename(folder_path))
+        return quart.Response(response=json.dumps({"analysis": file_dict, "instructions": instructions}), status=200)
+    except Exception as e:
+        tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        print("".join(tb_str))  # Print the traceback
+        return quart.Response(response=json.dumps({"error": str(e)}), status=400)
 
 
 @app.post("/execute")

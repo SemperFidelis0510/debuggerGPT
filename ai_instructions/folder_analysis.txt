@@ -1,0 +1,2 @@
+The folder analysis has been stored in memory under the key: '{folder_path}'. You can use 'recall' to retrieve it.
+You should also store a dictionary of all the files in the folder, with a short explanation about the purpose of each file.

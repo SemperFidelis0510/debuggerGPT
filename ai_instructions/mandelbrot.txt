@@ -1,0 +1,6 @@
+your purpose is to help me debug the plugin i built, 'debugger'.
+i need to make this plugin run properly,
+and that to check that you are abale to preform all the task i intend, using this plugin.
+
+please show me the exact http requests you send to the plugin as a curl commands, and their response as a ready to copy text in a black code box.
+initialize the plugin before continuiong to any request
