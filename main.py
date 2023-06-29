@@ -21,6 +21,7 @@ from memory import Memory
 
 app = quart.Quart(__name__)
 app = cors(app, allow_origin="https://chat.openai.com")
+explained = {'code_analysis': False}
 memory = Memory()
 
 
@@ -33,6 +34,7 @@ memory = Memory()
 # todo: automate plugin improvement
 # todo: add plugin template
 # todo: check through memory, the user prompts.
+# todo: improve instructions
 
 @app.post("/initialize")
 async def initialize_plugin():
@@ -82,10 +84,14 @@ async def remember():
 @app.route("/memory/<key>", methods=["GET"])
 async def recall(key):
     key = unquote(key)
+    All = quart.request.args.get("all", "False").lower() == "true"
+    if All:
+        return Response(response=json.dumps({"value": memory.to_json()}), status=200)
     if key in memory:
         return Response(response=json.dumps({"value": memory[key]}), status=200)
     else:
         return Response(response='Key not found', status=400)
+
 
 
 @app.post("/listen")
@@ -145,8 +151,11 @@ async def analyze_code():
                 'cyclomatic_complexity': cyclomatic_complexity,
                 'halstead_metrics': halstead_metrics,
             })
-        with open('ai_instructions/code_analysis.txt', 'r') as file:
-            instructions = file.read()
+        if not explained['code_analysis']:
+            with open('ai_instructions/code_analysis.txt', 'r') as file:
+                instructions = file.read()
+        else:
+            instructions = ''
         return quart.Response(response=json.dumps({"analysis": code_analysis, "instructions": instructions}),
                               status=200)
     except Exception as e:

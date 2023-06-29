@@ -1,38 +1,23 @@
-As a Python Code Debugging Plugin, I can help you debug Python code files,
-manage Python environments, and manipulate files on your computer.
-Here are the main capabilities and how to use them:
+As a Python Code Debugging Plugin, I can help you debug Python code files, manage Python environments, manipulate files and folders on your computer, and manage a memory system. Here are the main capabilities and how to use them:
 
-1) Initialization: Before using the plugin, initialize it by running the 'initialize_plugin' function.
-This function sets up a conda environment for running scripts. The default environment is 'debuggerGPT',
-but you can specify a different one during initialization or when running a script.
+1) Initialization: Before using the plugin, initialize it by running the 'initialize_plugin' function. This function sets up a conda environment for running scripts. The default environment is 'debuggerGPT', but you can specify a different one during initialization or when running a script.
 
-2) Execute Shell Commands: You can ask me to 'execute a command' and provide the command as a string.
-If you want to run the command in a specific environment, include the 'env_name' in your request.
+2) Execute Shell Commands: You can ask me to 'execute a command' and provide the command as a string. If you want to run the command in a specific environment, include the 'env_name' in your request.
 
-3) Run Python Scripts: You can ask me to 'run a Python script in a specific environment'
-and provide the path to the script and the name of the environment. Before running a script for the first time,
-I will check the code for non-native dependencies and ensure they are installed in the chosen environment.
+3) Run Python Scripts: You can ask me to 'run a Python script in a specific environment' and provide the path to the script and the name of the environment.
 
-4) Modify Files: You can use the 'modify a file' command to update the local file of the code.
+4) Modify Files: You can use the 'edit_file' function to update the local file of the code. You need to provide the filename, the fixes you want to apply, and the method of applying the fixes (substitution, insertion, or replacement).
 
-5) Install Python Packages: You can ask me to 'install Python packages' and provide a list of packages to install in a specific environment.
+5) Analyze Code: You can use the 'analyze_code' function to get a detailed analysis of a Python code file. This includes the number of lines, the functions defined in the code, the code content, and the dependencies needed to run the code. You can also get additional information like the classes defined in the code, the comments in the code, and the code's cyclomatic complexity and Halstead metrics.
 
-6) Debug Code: To debug a code, run the code, examine the output and error messages,
-decide how to fix the code, and then use the 'modify a file' command to update the code.
-Repeat this process until the code runs without errors.
+6) Download Files: You can use the 'download_file' function to download a file from a given URL and save it to a specified local path.
 
-7) Analyze Code: You can use the 'analyze_code' function to get a detailed analysis of a Python code file.
-This includes the number of lines, the functions defined in the code, the code content, and the dependencies needed to run the code.
+7) Analyze Folder: The 'analyze_folder' function can be used to get a detailed analysis of a folder. This includes a list of all the files in the folder and their paths. The analysis is saved to the plugin's memory.
 
-8) Download Files: You can use the 'download_file' function to download a file from a given URL and save it to a specified local path.
+8) Memory Management: The 'remember' and 'recall' functions can be used to store and retrieve data in the plugin's memory. This can be useful for storing data that needs to be accessed across multiple requests. You can also check if a certain key exists in the memory using the 'contains' function, and you can save the current state of the memory to a JSON file using the 'cache' function, or load the memory state from a JSON file using the 'load' function.
 
-9) List Files: The 'list_files' function can be used to list all the files in a specified folder.
+9) Text to Speech: The 'speak' function can be used to convert text to speech. This can be useful for accessibility purposes or for creating audio from text.
 
-10) Memory Management: The 'remember' and 'recall' functions can be used to store and retrieve data in the plugin's memory.
-This can be useful for storing data that needs to be accessed across multiple requests.
+10) Speech to Text: The 'listen' function can be used to convert speech to text. This can be useful for transcribing audio or for voice commands.
 
-11) Text to Speech: The 'speak' function can be used to convert text to speech.
-This can be useful for accessibility purposes or for creating audio from text.
-
-12) Speech to Text: The 'listen' function can be used to convert speech to text.
-This can be useful for transcribing audio or for voice commands.
+Remember to use the 'remember' and 'recall' endpoints to save important data to the memory and to retrieve this data when needed. These endpoints allow you to interact with the memory system, storing and retrieving data across multiple requests. This can be particularly useful when you need to maintain context or store intermediate results during a debugging session.

@@ -170,11 +170,16 @@ paths:
     get:
       operationId: recall
       parameters:
-      - name: key
-        in: path
-        required: true
-        schema:
-          type: string
+        -  name: key
+           in: path
+           required: true
+           schema:
+             type: string
+        -  name: all
+           in: query
+           required: false
+           schema:
+             type: boolean
       responses:
         '200':
           description: Memory retrieved successfully
