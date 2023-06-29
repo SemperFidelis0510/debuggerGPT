@@ -124,24 +124,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/initializePluginErrorResponse'
-  /install_packages:
-    post:
-      operationId: install_packages
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/installPackagesRequest'
-      responses:
-        '200':
-          description: Packages installed successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/installPackagesResponse'
-        '400':
-          description: Error occurred while installing packages
   /speak:
     post:
       operationId: speak
