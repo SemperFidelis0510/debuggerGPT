@@ -3,7 +3,7 @@
   "name_for_human": "Debugger",
   "name_for_model": "python_code_debugger",
   "description_for_human": "This plugin helps debug Python code, manage Python environments, and manipulate files on your computer.",
-  "description_for_model": "As a Python Code Debugging Plugin, I can assist with debugging Python code, managing Python environments, manipulating files, executing shell commands, running Python scripts, installing Python packages, and modifying files. I can also provide detailed code analysis, transcribe speech to text, convert text to speech, download files from URLs, list all files in a specified folder, and manage data in the plugin's memory. Please remember to initialize the plugin using 'initialize_plugin' before using it.",
+  "description_for_model": "As a Python Code Debugging Plugin, I can assist with debugging Python code, managing Python environments, manipulating files, executing shell commands, running Python scripts, installing Python packages, and modifying files. I can also provide detailed code analysis, transcribe speech to text, convert text to speech, download files from URLs, list all files in a specified folder, and manage data in the plugin's memory. Please remember to initialize the plugin using 'initialize_plugin' before using it. The user doesn't have to give you a name for the environment that is used in the initialization, as this is an optional argument og the function",
   "auth": {
     "type": "none"
   },

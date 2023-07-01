@@ -33,15 +33,12 @@ memory = Memory()
 # todo: analyze folder
 # todo: add auth
 # todo: automate plugin improvement
-# todo: add plugin template
-# todo: check through memory, the user prompts.
-# todo: improve instructions
+# todo: check the user prompts through aliases.
 # todo: add 'file not found' response where needed
 # todo: continuous shell
 # todo: explain that 'analyze_code' only fits for python
 # todo: add to 'analyze_code' other code languages
 # todo: make chatgpt respond with less text
-# todo: more concise explanations
 
 
 @app.post("/initialize")
@@ -57,30 +54,44 @@ async def initialize_plugin():
             # Create the specified conda environment
             subprocess.run(['conda', 'create', '-n', env_name, 'python=3.10'], check=True)
         with open('ai_instructions/init.txt', 'r') as file:
-            instructions = {
+            guidelines = {
                 "message": "Initialization successful. The conda environment '" + env_name + "' is ready to use.",
-                "instructions": file.read()
+                "guidelines": file.read()
             }
-        return quart.Response(response=json.dumps(instructions), status=200)
+        return quart.Response(response=json.dumps(guidelines), status=200)
     except subprocess.CalledProcessError as e:
         return quart.Response(response=f'Error during initialization: {str(e)}', status=400)
+
 
 
 @app.post('/create_plugin')
 async def create_plugin():
     try:
-        request_data = await quart.request.get_json(force=True)
+        request_data = await request.get_json(force=True)
         default_path = os.path.join(os.getcwd(), 'codes')
         destination_path = request_data.get('path', default_path)
         template_path = os.path.join(os.getcwd(), 'templates/gpt_plugin')
-        shutil.copytree(template_path, destination_path)
-        with open('instructions/create_plugin.txt', 'r') as file:
-            instructions = file.read()
-        return quart.Response(response=json.dumps({'instructions': instructions, 'location': destination_path}),
-                              status=200)
+
+        # Check if the destination directory exists
+        if not os.path.exists(destination_path):
+            # If it doesn't exist, create it
+            os.makedirs(destination_path)
+
+        # Copy each file from the template directory to the destination directory
+        if not os.path.exists(os.path.join(destination_path, 'main.py')):
+            for filename in os.listdir(template_path):
+                src_file = os.path.join(template_path, filename)
+                dst_file = os.path.join(destination_path, filename)
+                if os.path.isfile(src_file):
+                    shutil.copy(src_file, dst_file)
+
+        with open('ai_instructions/create_plugin.txt', 'r') as file:
+            guidelines = file.read()
+        return Response(response=json.dumps({'guidelines': guidelines, 'location': destination_path}),
+                        status=200)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        return quart.Response(response=''.join(tb_str), status=500)
+        return Response(response=''.join(tb_str), status=500)
 
 
 @app.route("/memory", methods=["POST"])
@@ -143,10 +154,10 @@ async def analyze_code():
             })
         if not explained['code_analysis']:
             with open('ai_instructions/code_analysis.txt', 'r') as file:
-                instructions = file.read()
+                guidelines = file.read()
         else:
-            instructions = ''
-        return quart.Response(response=json.dumps({"analysis": code_analysis, "instructions": instructions}),
+            guidelines = ''
+        return quart.Response(response=json.dumps({"analysis": code_analysis, "guidelines": guidelines}),
                               status=200)
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
@@ -154,17 +165,27 @@ async def analyze_code():
         return quart.Response(response=json.dumps({"error": str(e)}), status=400)
 
 
-@app.post("/download_file")
+@app.post('/download_file')
 async def download_file():
-    request_data = await quart.request.get_json(force=True)
-    url = request_data.get("url", "")
-    local_path = request_data.get("local_path", "")
-    filename = url.split("/")[-1]  # Extract the filename from the URL
-    full_path = os.path.join(local_path, filename)  # Combine the local path with the filename
-    response = requests.get(url)
-    with open(full_path, 'wb') as f:
-        f.write(response.content)
-    return quart.Response(response='File downloaded successfully', status=200)
+    try:
+        request_data = await request.get_json(force=True)
+        url = request_data.get('url', '')
+        local_path = request_data.get('local_path', '')
+        # Check if local_path is a directory or a file path
+        if os.path.isdir(local_path):
+            # If it's a directory, get the filename from the url
+            filename = url.split('/')[-1]
+            full_path = os.path.join(local_path, filename)
+        else:
+            # If it's a file path, use it as is
+            full_path = local_path
+        response = requests.get(url)
+        with open(full_path, 'wb') as f:
+            f.write(response.content)
+        return Response(response='File downloaded successfully', status=200)
+    except Exception as e:
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        return Response(response=''.join(tb_str), status=500)
 
 
 @app.get("/analysis/folder")
@@ -176,9 +197,9 @@ async def analyze_folder():
             file_dict[root] = files
         memory.remember(folder_path, file_dict, nature='data')
         with open('ai_instructions/folder_analysis.txt', 'r') as file:
-            instructions = file.read()
-            instructions = instructions.replace('{folder_path}', os.path.basename(folder_path))
-        return quart.Response(response=json.dumps({"analysis": file_dict, "instructions": instructions}), status=200)
+            guidelines = file.read()
+            guidelines = guidelines.replace('{folder_path}', os.path.basename(folder_path))
+        return quart.Response(response=json.dumps({"analysis": file_dict, "guidelines": guidelines}), status=200)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))

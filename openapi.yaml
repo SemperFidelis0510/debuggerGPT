@@ -380,30 +380,6 @@ components:
         content:
           type: string
           description: The content of the file.
-    modifyFileRequest:
-      type: object
-      required:
-        - fixes
-      properties:
-        fixes:
-          type: array
-          items:
-            type: object
-            required:
-              - lines
-              - code
-              - indentation
-            properties:
-              lines:
-                type: array
-                items:
-                  type: integer
-                minItems: 2
-                maxItems: 2
-              code:
-                type: string
-              indentation:
-                type: string
     EditFileRequest:
       type: object
       required:

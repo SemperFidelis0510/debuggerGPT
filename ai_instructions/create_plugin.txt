@@ -10,6 +10,10 @@ To create a new AI plugin, follow these steps:
 
 5. '.well-known/ai-plugin.json' is the file that provides information about the plugin to ChatGPT. It includes the name of the plugin, a brief description, and the initialization prompt that instructs ChatGPT on how to use the plugin. You will need to update this file with the relevant information about your new plugin.
 
-6. After you have made the necessary changes to these files, you can start the plugin by running 'main.py'. This will start a server that ChatGPT can interact with.
+6. The initialization function is a crucial part of every plugin. This function should define any initial variables that are needed and most importantly, it should return the main guidelines on how to use the plugin. These guidelines should be concise, clear, and to the point. They should guide ChatGPT on when and how to use the plugin.
+
+7. Continuously providing ChatGPT with guidelines is a key aspect of creating a good plugin. Whenever ChatGPT receives data from the plugin, it should also receive guidelines on how to interpret and use that data. This will ensure that ChatGPT can effectively use the plugin's functionality.
+
+8. After you have made the necessary changes to these files, you can start the plugin by running 'main.py'. This will start a server that ChatGPT can interact with.
 
 Remember to test your plugin thoroughly to ensure it works as expected. Good luck!
