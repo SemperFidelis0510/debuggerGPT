@@ -19,10 +19,12 @@ from radon.metrics import h_visit
 from pylint import epylint as lint
 from memory import Memory
 import shutil
+from black import format_file_in_place, WriteBack
+from pathlib import Path
 
 app = quart.Quart(__name__)
 app = cors(app, allow_origin="https://chat.openai.com")
-explained = {'code_analysis': False}
+explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 
 
@@ -61,7 +63,6 @@ async def initialize_plugin():
         return quart.Response(response=json.dumps(guidelines), status=200)
     except subprocess.CalledProcessError as e:
         return quart.Response(response=f'Error during initialization: {str(e)}', status=400)
-
 
 
 @app.post('/create_plugin')
@@ -285,7 +286,7 @@ async def edit_file(filename):
             f.writelines(lines)
 
         if filename.endswith('.py'):
-            subprocess.run(['black', filename], check=True)
+            format_file_in_place(Path(filename), fast=False, mode=WriteBack.YES)
 
         return quart.Response(response='OK', status=200)
     except Exception as e:

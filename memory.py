@@ -52,3 +52,29 @@ class Memory:
 
     def to_json(self):
         return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
+
+
+class Plan:
+    def __init__(self):
+        self.plan = ''
+        self.reduction = {}
+
+    def __str__(self):
+        return self.plan
+
+    def reason(self):
+        pass
+
+    def cache(self):
+        with open('memory/memory.json', 'w') as f:
+            json.dump({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, f)
+
+    def load(self):
+        with open('memory/memory.json', 'r') as f:
+            data = json.load(f)
+            self.memory = data.get('memory', {})
+            self.aliases = data.get('aliases', {})
+            self.data = data.get('data', {})
+
+    def to_json(self):
+        return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
