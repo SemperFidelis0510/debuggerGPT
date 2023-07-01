@@ -1,0 +1,15 @@
+To create a new AI plugin, follow these steps:
+
+1. The plugin template has already been copied to the desired location. You can find it at the path provided in the 'location' field of the response.
+
+2. The main files you need to work on are 'main.py', 'openapi.yaml', and '.well-known/ai-plugin.json'.
+
+3. 'main.py' is the main Python file where all the plugin's functions are defined. You will need to modify this file according to the functionality you want to add to the plugin.
+
+4. 'openapi.yaml' is the file that defines the API of the plugin. It specifies the endpoints, the HTTP methods, the parameters, and the responses of each function. You will need to update this file to reflect the changes you make in 'main.py'.
+
+5. '.well-known/ai-plugin.json' is the file that provides information about the plugin to ChatGPT. It includes the name of the plugin, a brief description, and the initialization prompt that instructs ChatGPT on how to use the plugin. You will need to update this file with the relevant information about your new plugin.
+
+6. After you have made the necessary changes to these files, you can start the plugin by running 'main.py'. This will start a server that ChatGPT can interact with.
+
+Remember to test your plugin thoroughly to ensure it works as expected. Good luck!

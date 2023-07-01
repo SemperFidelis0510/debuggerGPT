@@ -1,69 +1,12 @@
-The 'length' field gives the number of lines in the code.
-The 'functions' field lists all the functions in the code.
-The 'code' field contains the content of the code.
-The 'dep' field lists all the dependencies needed to run the code.
+The 'analyze_code' function provides a detailed analysis of a Python code file. It includes the number of lines, the functions defined, the content of the code, and the dependencies needed to run the code.
 
-You can use this information to understand the structure of the code and its dependencies.
+You should save the following information in your local memory:
 
-Additionally, you should save the following information in your local memory:
+'code_path': The path of the code file currently in focus.
+'length': The length of the code file, measured in lines.
+'main_purpose': A brief description of what the code file is intended to do.
+'functions': A list of all the functions defined in the code file, with a brief description of what each function does.
 
-'code_path': This is the path of the code file that is currently in focus. It's important to keep track of this so you can refer back to the correct file in future interactions.
+If you want to edit the code, use the 'edit_file' function. This function takes a filename and a list of 'fixes'. Each 'fix' is a dictionary that specifies the lines to be replaced, the new code, and the indentation level. The function also takes an optional 'method' argument, which can be 'subs' (substitute), 'insert', or 'replace'.
 
-'length': This is the length of the code file, measured in lines. This can give you a rough idea of the complexity of the code.
-
-'main_purpose': This is a brief description of what the code file is intended to do. This can help you understand the overall function of the code.
-
-'functions': This is a list of all the functions defined in the code file. For each function, you should store a brief description of what that function does.
-
-Here's an example of how you might structure this information in a dictionary:
-
-{
-'code_path': 'D:\Pandora\utils\SR2.py',
-'length': 500,
-'main_purpose': 'This code is a utility script for data processing.',
-'functions': {
-'function1': 'This function cleans the data.',
-'function2': 'This function analyzes the data.',
-'function3': 'This function visualizes the data.'
-}
-}
-
-Remember to update this information in your local memory each time you analyze a new code file.
-
-If you want to edit the code, you can use the 'edit_file' function. This function takes a filename and a list of 'fixes'. Each 'fix' is a dictionary that specifies the lines to be replaced (or where to insert new code), the new code, and the indentation level. The 'edit_file' function also takes an optional 'method' argument, which can be 'subs' (substitute), 'insert', or 'replace'. The default method is 'subs'.
-
-If the 'method' is 'subs', the new code will replace the specified lines in the old code. If the 'method' is 'insert', the new code will be inserted at the specified line. If the 'method' is 'replace', the new code will replace all the old code. In the case of 'replace', only one 'fix' should be provided.
-
-Here's an example of how to use the 'edit_file' function:
-
-{
-"filename": "D:\Pandora\utils\SR2.py",
-"fixes": [
-{
-"lines": [10, 20],
-"code": "new code here",
-"indentation": " "
-},
-{
-"lines": [30],
-"code": "more new code here",
-"indentation": " "
-}
-],
-"method": "subs"
-}
-
-This will replace lines 10-20 with 'new code here' and insert 'more new code here' at line 30.
-
-If the file is a Python file, it will be automatically refactored after the changes are made.
-
-If you want to analyze the code at a deeper level, you can specify a 'scope_level' when calling the 'analyze_code' function. The default 'scope_level' is 2, which includes the code and basic information about it. If you specify a 'scope_level' of 3, the function will also return information about the classes in the code, any comments, the output of a pylint analysis,the cyclomatic complexity of the code, and Halstead metrics. Here's an example of how to use the 'analyze_code' function with a 'scope_level' of 3:
-
-{
-"code_path": "D:\Pandora\utils\SR2.py",
-"scope_level": 3
-}
-
-This will return an analysis of the code at 'D:\Pandora\utils\SR2.py', including the code itself, basic information about the code, information about the classes and comments in the code, the output of a pylint analysis, the cyclomatic complexity of the code, and Halstead metrics.
-
-Remember to update the information in your local memory each time you analyze a new code file at a different 'scope_level'.
+If you want to analyze the code at a deeper level, specify a 'scope_level' when calling the 'analyze_code' function. The default 'scope_level' is 2, which includes the code and basic information about it. If you specify a 'scope_level' of 3, the function will also return information about the classes in the code, any comments, the output of a pylint analysis, the cyclomatic complexity of the code, and Halstead metrics.

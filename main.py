@@ -18,6 +18,7 @@ from radon.complexity import cc_visit
 from radon.metrics import h_visit
 from pylint import epylint as lint
 from memory import Memory
+import shutil
 
 app = quart.Quart(__name__)
 app = cors(app, allow_origin="https://chat.openai.com")
@@ -37,6 +38,10 @@ memory = Memory()
 # todo: improve instructions
 # todo: add 'file not found' response where needed
 # todo: continuous shell
+# todo: explain that 'analyze_code' only fits for python
+# todo: add to 'analyze_code' other code languages
+# todo: make chatgpt respond with less text
+# todo: more concise explanations
 
 
 @app.post("/initialize")
@@ -69,6 +74,23 @@ async def speak():
     engine.say(text)
     engine.runAndWait()
     return quart.Response(response='OK', status=200)
+
+
+@app.post('/create_plugin')
+async def create_plugin():
+    try:
+        request_data = await quart.request.get_json(force=True)
+        default_path = os.path.join(os.getcwd(), 'codes')
+        destination_path = request_data.get('path', 'codes')
+        template_path = os.path.join(os.getcwd(), 'templates/gpt_plugin')
+        shutil.copytree(template_path, destination_path)
+        with open('instructions/create_plugin.txt', 'r') as file:
+            instructions = file.read()
+        return quart.Response(response=json.dumps({'instructions': instructions, 'location': destination_path}),
+                              status=200)
+    except Exception as e:
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        return quart.Response(response=''.join(tb_str), status=500)
 
 
 @app.route("/memory", methods=["POST"])
@@ -162,7 +184,7 @@ async def analyze_code():
                               status=200)
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
-        print("".join(tb_str))  # Print the traceback
+        print("".join(tb_str))
         return quart.Response(response=json.dumps({"error": str(e)}), status=400)
 
 

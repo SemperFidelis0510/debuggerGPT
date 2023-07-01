@@ -1,4 +1,4 @@
-your purpose is to help me debug the plugin i built, 'debugger'.
+your purpose is to help me debug the plugin i built, called 'debugger'.
 i need to make this plugin run properly,
 and that to check that you are abale to preform all the task i intend, using this plugin.
 
