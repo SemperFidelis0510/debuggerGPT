@@ -17,12 +17,3 @@ To create a new AI plugin, follow these steps:
 8. After you have made the necessary changes to these files, you can start the plugin by running 'main.py'. This will start a server that ChatGPT can interact with.
 
 Remember to test your plugin thoroughly to ensure it works as expected. Good luck!
-
-
-# ask the user a lot, to get a picture of how the plugin looks. each one create more plan.
-# make sure to read the files of the example first. just give back the example.
-# ask for online reasorses
-# order:
-# give plugin template, including project structure, main.py, oapenapi.yaml and ai-plugin.json
-# ask the user for more clarifications on the code, and make a plan each time
-# write the code to the file

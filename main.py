@@ -9,10 +9,7 @@ from quart_cors import cors
 import re
 import requests
 import ast
-import sounddevice as sd
 import numpy as np
-from google.cloud import speech
-import pyttsx3
 import traceback
 from radon.complexity import cc_visit
 from radon.metrics import h_visit

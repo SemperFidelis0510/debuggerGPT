@@ -7,3 +7,7 @@ google-cloud-speech
 pyttsx3
 radon
 pylint
+black
+pathspec
+pathspec
+packaging
