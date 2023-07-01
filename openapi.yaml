@@ -261,9 +261,6 @@ components:
         value:
           type: string
           description: The value to remember.
-        alias:
-          type: boolean
-          description: Whether the key is an alias.
     recallResponse:
       type: object
       properties:
@@ -402,33 +399,16 @@ components:
         method:
           type: string
           enum: [ replace, insert, new ]
-          default: subs
+          default: replace
     initializePluginResponse:
       type: object
       properties:
         message:
           type: string
           description: The status of the initialization.
-        instructions:
+        guidelines:
           type: string
-          description: Detailed instructions on how to use the plugin.
-      installPackagesRequest:
-        type: object
-        properties:
-          env_name:
-            type: string
-            description: The name of the environment. If not specified, defaults to 'debuggerGPT'.
-          packages:
-            type: array
-            items:
-              type: string
-            description: The list of Python packages to install.
-      initializePluginRequest:
-        type: object
-        properties:
-          env_name:
-            type: string
-            description: The name of the environment to create or use.
+          description: Detailed guidelines on how to use the plugin.
     initializePluginRequest:
       type: object
       properties:
@@ -449,6 +429,6 @@ components:
     createPluginResponse:
       type: object
       properties:
-        message:
+        guidelines:
           type: string
           description: The result of the operation.

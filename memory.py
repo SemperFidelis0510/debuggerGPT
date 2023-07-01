@@ -1,4 +1,5 @@
 import json
+import os
 
 
 class Memory:
@@ -78,3 +79,6 @@ class Plan:
 
     def to_json(self):
         return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
+
+
+
