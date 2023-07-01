@@ -66,16 +66,6 @@ async def initialize_plugin():
         return quart.Response(response=f'Error during initialization: {str(e)}', status=400)
 
 
-@app.post("/speak")
-async def speak():
-    request_data = await quart.request.get_json(force=True)
-    text = request_data.get("text", "")
-    engine = pyttsx3.init()
-    engine.say(text)
-    engine.runAndWait()
-    return quart.Response(response='OK', status=200)
-
-
 @app.post('/create_plugin')
 async def create_plugin():
     try:
@@ -116,30 +106,6 @@ async def recall(key):
         return Response(response=json.dumps({"value": memory[key]}), status=200)
     else:
         return Response(response='Key not found', status=400)
-
-
-@app.post("/listen")
-async def listen():
-    # Record audio
-    duration = 10  # seconds
-    fs = 44100  # Sample rate
-    channels = 1  # Number of channels
-    myrecording = sd.rec(int(duration * fs), samplerate=fs, channels=channels)
-    sd.wait()  # Wait for the recording to finish
-
-    # Transcribe audio to text
-    client = speech.SpeechClient()
-    audio = speech.RecognitionAudio(content=np.array(myrecording).tobytes())
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=fs,
-        language_code="en-US",
-    )
-    response = client.recognize(config=config, audio=audio)
-
-    # Extract the transcription and return it
-    for result in response.results:
-        return {"transcription": result.alternatives[0].transcript}
 
 
 @app.get("/analysis/code")

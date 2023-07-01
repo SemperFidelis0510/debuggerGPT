@@ -124,18 +124,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/initializePluginErrorResponse'
-  /speak:
-    post:
-      operationId: speak
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/speakRequest'
-      responses:
-        '200':
-          description: Text spoken successfully
   /memory:
     post:
       operationId: remember
@@ -171,16 +159,6 @@ paths:
                 $ref: '#/components/schemas/recallResponse'
         '400':
           description: Key not found
-  /listen:
-    post:
-      operationId: listen
-      responses:
-        '200':
-          description: Transcription retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/listenResponse'
   /analysis/code:
     get:
       operationId: analyze_code
@@ -271,14 +249,6 @@ paths:
 
 components:
   schemas:
-    speakRequest:
-      type: object
-      required:
-      - text
-      properties:
-        text:
-          type: string
-          description: The text to speak.
     rememberRequest:
       type: object
       required:
@@ -300,12 +270,6 @@ components:
         value:
           type: string
           description: The value of the key.
-    listenResponse:
-      type: object
-      properties:
-        transcription:
-          type: string
-          description: The transcription of the audio.
     analyzeCodeRequest:
       type: object
       required:
