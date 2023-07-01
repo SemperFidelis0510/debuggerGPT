@@ -81,7 +81,7 @@ async def create_plugin():
     try:
         request_data = await quart.request.get_json(force=True)
         default_path = os.path.join(os.getcwd(), 'codes')
-        destination_path = request_data.get('path', 'codes')
+        destination_path = request_data.get('path', default_path)
         template_path = os.path.join(os.getcwd(), 'templates/gpt_plugin')
         shutil.copytree(template_path, destination_path)
         with open('instructions/create_plugin.txt', 'r') as file:

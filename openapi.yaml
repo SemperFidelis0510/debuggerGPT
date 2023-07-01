@@ -250,6 +250,25 @@ paths:
                 properties:
                   error:
                     type: string
+  /create_plugin:
+    post:
+      operationId: create_plugin
+      parameters:
+        -  name: dest_path
+           in: query
+           required: false
+           schema:
+             type: string
+      responses:
+        '200':
+          description: Plugin created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/createPluginResponse'
+        '400':
+          description: Error occurred
+
 components:
   schemas:
     speakRequest:
@@ -487,3 +506,9 @@ components:
           items:
             type: string
           description: The list of Python packages to install.
+    createPluginResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The result of the operation.
