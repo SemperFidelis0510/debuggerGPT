@@ -392,6 +392,8 @@ components:
                 type: array
                 items:
                   type: integer
+                minItems: 1
+                maxItems: 2
               code:
                 type: string
               indentation:

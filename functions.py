@@ -97,14 +97,27 @@ async def analyze_folder(folder_path):
     return file_dict
 
 
-async def execute_command(command, env_name):
+async def execute_command(command, env_name, shell):
     if env_name:
         command = f"conda run -n {env_name} {command}"
     try:
-        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
-        return quart.Response(response=json.dumps({"output": result.stdout}), status=200)
-    except subprocess.CalledProcessError as e:
-        return quart.Response(response=json.dumps({"error": str(e), "output": e.output}), status=400)
+        # Write the command to the shell's stdin and flush to ensure it's sent
+        shell.stdin.write((command + '\n').encode())
+        shell.stdin.flush()
+
+        # Read the output from the shell's stdout
+        output = shell.stdout.readline().decode()
+
+        # Keep reading lines from the shell's stdout until we reach an empty line
+        while True:
+            line = shell.stdout.readline().decode()
+            if line == '':
+                break
+            output += line
+
+        return quart.Response(response=json.dumps({"output": output}), status=200)
+    except Exception as e:
+        return quart.Response(response=json.dumps({"error": str(e)}), status=400)
 
 
 async def run_script(script_path, env_name, args_str):
@@ -130,29 +143,41 @@ async def get_file(filename):
 async def edit_file(filename, fixes, method):
     start_line = end_line = 0
     if method == "replace" and len(fixes) != 1:
-        return 400
+        return Response(response='Error: For "replace" method, only one fix should be provided', status=400)
 
     lines = []
     if method != "new" and os.path.exists(filename):
         with open(filename, 'r') as f:
             lines = f.readlines()
+            if lines[-1][-1] != '\n':
+                lines[-1] += '\n'
 
     for fix in fixes:
         if len(fix["lines"]) == 2:
             start_line, end_line = fix["lines"]
         elif len(fix["lines"]) == 1:
             start_line = end_line = fix["lines"][0]
+        elif isinstance(fix["lines"], int):
+            start_line = end_line = fix["lines"]
 
         new_code = fix["code"]
-        indentation = fix["indentation"]
+        if "indentation" in fix:
+            indentation = fix["indentation"]
+        else:
+            indentation = ''
         indented_code = '\n'.join([indentation + line for line in new_code.split('\n')])
 
         if method == "replace":
+            if end_line > len(lines):
+                lines.extend(['\n'] * (end_line - len(lines)))
             lines[start_line - 1:end_line] = [indented_code + '\n']
         elif method == "insert":
             lines.insert(start_line - 1, indented_code + '\n')
         elif method == "new":
             lines = [indented_code + '\n']
+        elif method == "append":
+            lines.append(indented_code + '\n')
+
 
     with open(filename, 'w') as f:
         f.writelines(lines)
@@ -160,7 +185,7 @@ async def edit_file(filename, fixes, method):
     if filename.endswith('.py'):
         format_file_in_place(Path(filename), fast=False, mode=mode)
 
-    return 200
+    return Response(response='OK', status=200)
 
 
 def remove_ansi_escape_sequences(text):
@@ -177,8 +202,13 @@ class Instructor:
         self.plan_depth = 5
         self.one_time = ['init']
 
+        self.load_instructions()
+
     def __call__(self, *args, **kwargs):
-        return self.teach(args)
+        if len(args) == 1:
+            return self.teach(args[0])
+        else:
+            return None
 
     def load_instructions(self):
         instructions_dir = 'ai_instructions'

@@ -16,15 +16,21 @@ explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = functions.Instructor()
 ok = Response(response='OK', status=200)
+shell_process = None
 
 
 @app.post("/initialize")
 async def initialize():
+    global shell_process
     request_data = await request.get_json(force=True)
     try:
         env_name = request_data.get("env_name", "debuggerGPT")
         memory['environ'] = env_name
         memory['w_dir'] = os.getcwd()
+        if shell_process is None:
+            shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+
         await functions.initialize_plugin(env_name)
 
         response = {
@@ -33,7 +39,10 @@ async def initialize():
         }
         return Response(response=json.dumps(response), status=200)
     except subprocess.CalledProcessError as e:
-        return Response(response=f'Error during initialization: {str(e)}', status=400)
+        error_response = {
+            "error": str(e)
+        }
+        return Response(response=json.dumps(error_response), status=400, mimetype='application/json')
 
 
 @app.get("/files/<path:filename>")
@@ -43,26 +52,22 @@ async def get_file(filename):
         if content == 404:
             return Response(response='File not found', status=404)
         else:
-            Response(response=json.dumps({"content": content}), status=200)
+            return Response(response=json.dumps({"content": content}), status=200, mimetype='application/json')
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
+        return Response(response="".join(tb_str), status=500, mimetype='text/plain')
 
 
 @app.post("/files/<path:filename>")
 async def edit_file(filename):
-    if not instructor.passed('edit_file'):
-        return Response(response=instructor('edit_file'), status=200)
+    # if not instructor.passed('edit_file'):
+    #     return Response(response=instructor('edit_file'), status=200)
     try:
         request_data = await request.get_json(force=True)
         fixes = request_data.get("fixes", [])
         method = request_data.get("method", "replace")
-        error = await functions.edit_file(filename, fixes, method)
-        if error == 200:
-            return Response(response='OK', status=200)
-        elif error == 400:
-            return Response(response='Error: For "replace" method, only one fix should be provided', status=400)
+        return await functions.edit_file(filename, fixes, method)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
