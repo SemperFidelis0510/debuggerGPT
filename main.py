@@ -80,7 +80,7 @@ async def execute_command():
         request_data = await request.get_json(force=True)
         command = request_data.get("command", "")
         env_name = request_data.get("env_name", None)
-        return await functions.execute_command(command, env_name)
+        return await functions.execute_command(command, env_name, shell_process)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
@@ -124,6 +124,7 @@ async def analyze_folder():
     try:
         folder_path = request.args.get("folder_path", "")
         file_dict = await functions.analyze_folder(folder_path)
+        folder_path = os.path.basename(folder_path)
         memory.remember(folder_path, file_dict, nature='data')
         guidelines = instructor('folder_analysis')
         response = {"analysis": file_dict,
