@@ -11,12 +11,16 @@ import subprocess
 import quart
 
 app = Quart(__name__)
-app = cors(app, allow_origin="https://chat.openai.com")
+app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
+# app = cors(app, allow_origin="*")
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = functions.Instructor()
 ok = Response(response='OK', status=200)
 shell_process = None
+if shell_process is None:
+    shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
 
 
 @app.post("/initialize")
@@ -27,9 +31,6 @@ async def initialize():
         env_name = request_data.get("env_name", "debuggerGPT")
         memory['environ'] = env_name
         memory['w_dir'] = os.getcwd()
-        if shell_process is None:
-            shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
 
         await functions.initialize_plugin(env_name)
 

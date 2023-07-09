@@ -13,8 +13,9 @@ from pylint import epylint as lint
 import shutil
 from pathlib import Path
 from black import format_file_in_place, Mode, TargetVersion
+import select
+import threading
 
-# Create a Mode object
 mode = Mode(
     target_versions={TargetVersion.PY38},
     line_length=88,
@@ -97,7 +98,18 @@ async def analyze_folder(folder_path):
     return file_dict
 
 
+def read_output(shell, output):
+    while True:
+        line = shell.stdout.readline().decode()
+        if line == '':
+            break
+        output.append(line)
+
+
 async def execute_command(command, env_name, shell):
+    if shell is None or shell.poll() is not None:
+        return quart.Response(response=json.dumps({"error": "Shell process is not running"}), status=400)
+
     if env_name:
         command = f"conda run -n {env_name} {command}"
     try:
@@ -106,14 +118,12 @@ async def execute_command(command, env_name, shell):
         shell.stdin.flush()
 
         # Read the output from the shell's stdout
-        output = shell.stdout.readline().decode()
-
-        # Keep reading lines from the shell's stdout until we reach an empty line
-        while True:
-            line = shell.stdout.readline().decode()
-            if line == '':
-                break
-            output += line
+        output = []
+        thread = threading.Thread(target=read_output, args=(shell, output))
+        thread.start()
+        thread.join(timeout=1.0)
+        output = ''.join(output)
+        output = remove_ansi_escape_sequences(output)
 
         return quart.Response(response=json.dumps({"output": output}), status=200)
     except Exception as e:
@@ -178,7 +188,6 @@ async def edit_file(filename, fixes, method):
         elif method == "append":
             lines.append(indented_code + '\n')
 
-
     with open(filename, 'w') as f:
         f.writelines(lines)
 
@@ -190,7 +199,10 @@ async def edit_file(filename, fixes, method):
 
 def remove_ansi_escape_sequences(text):
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-    return ansi_escape.sub('', text)
+    ansi_escape = ansi_escape.sub('', text)
+    ansi_escape.replace('\n', '')
+    ansi_escape.replace('\r', '')
+    return ansi_escape
 
 
 class Instructor:
