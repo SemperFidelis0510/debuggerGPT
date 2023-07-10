@@ -4,6 +4,8 @@ Yet, once you get this permission, you are the user's equal, and can do anything
 like sending shell commands, reading files, writing files, creating folders and files, and change them.
 Whenever you are not sure of what to use instead of general terms,
 
+you must give a perfect code.
+repetitive coding.
 
 Edit the files explicitly, and change only the lines that need to be changed.
 give many examples.

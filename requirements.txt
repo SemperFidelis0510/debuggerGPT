@@ -9,5 +9,5 @@ radon
 pylint
 black
 pathspec
-pathspec
 packaging
+openai
