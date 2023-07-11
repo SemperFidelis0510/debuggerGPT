@@ -107,28 +107,47 @@ def read_output(shell, output):
         output.append(line)
 
 
-async def execute_command(command, env_name, shell):
-    if shell is None or shell.poll() is not None:
-        return quart.Response(response=json.dumps({"error": "Shell process is not running"}), status=400)
+async def execute_command(command, env_name=None, shell_process=None, new_shell=False):
+    print(f"Executing command: {command}")  # Print the command that's being executed
 
-    if env_name:
-        command = f"conda run -n {env_name} {command}"
+    if env_name is not None:
+        command = f"conda activate {env_name} && {command}"
+    if shell_process is None:
+        shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                         stderr=subprocess.PIPE)
+
+    # Write the command to the process's stdin
+    shell_process.stdin.write(command.encode('utf-8'))
+    shell_process.stdin.write(b'\n')
+    shell_process.stdin.flush()
+
     try:
-        # Write the command to the shell's stdin and flush to ensure it's sent
-        shell.stdin.write((command + '\n').encode())
-        shell.stdin.flush()
-
-        # Read the output from the shell's stdout
-        output = []
-        thread = threading.Thread(target=read_output, args=(shell, output))
-        thread.start()
-        thread.join(timeout=1.0)
-        output = ''.join(output)
-        output = remove_ansi_escape_sequences(output)
-
-        return quart.Response(response=json.dumps({"output": output}), status=200)
+        # Read from the process's stdout and stderr
+        stdout = shell_process.stdout.readline().decode('utf-8')
+        stderr = shell_process.stderr.readline().decode('utf-8')
     except Exception as e:
-        return quart.Response(response=json.dumps({"error": str(e)}), status=400)
+        print(f"Exception while reading output: {e}")  # Print any exceptions that are raised
+        stdout = ""
+        stderr = str(e)
+
+    # Split the output into lines
+    stdout_lines = stdout.split('\n')
+    stderr_lines = stderr.split('\n')
+
+    if new_shell:
+        # Ignore the first 4 lines of stdout and the first line of stderr
+        stdout_lines = stdout_lines[4:]
+        stderr_lines = stderr_lines[1:]
+
+    # Join the lines back together
+    stdout = '\n'.join(stdout_lines)
+    stderr = '\n'.join(stderr_lines)
+
+    # Return a dictionary that matches the OpenAPI specification
+    if stderr != '':
+        return Response(response=json.dumps({"error": stderr, "output": stdout}), status=400)
+    else:
+        return Response(response=json.dumps({"output": stdout}), status=200)
 
 
 async def run_script(script_path, env_name, args_str):
@@ -145,7 +164,14 @@ async def run_script(script_path, env_name, args_str):
 async def get_file(filename):
     if os.path.exists(filename):
         with open(filename, 'r') as f:
-            content = f.read()
+            raw_content = f.readlines()
+
+        content = {0: ''}
+        i = 1
+        for line in raw_content:
+            content[i] = line.replace('\n', '')
+            i += 1
+
         return content
     else:
         return 404
@@ -258,6 +284,7 @@ class Code:
         self.error = error
         self.fixes = []
         self.path = ''
+        self.debug_model = 'gpt-4'
 
         if path is not None:
             self.from_file(path)
@@ -303,7 +330,7 @@ class Code:
     def compile_code(self):
         self.code = '\n'.join(self.code_lines)
 
-    def debug(self, model):
+    def debug(self):
         input_json = self.to_json()
         prompt = f"""
         You are a code debugger. Here is the code, its output, and the error it produced:
@@ -331,10 +358,12 @@ class Code:
         responses = []
         for part in prompt_parts:
             response = openai.ChatCompletion.create(
-                model=model,
+                model=self.debug_model,
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": part}
+                    {"role": "system",
+                     "content": "You are an experienced Python coder. You want to help the user debug his codes."},
+                    {"role": "user",
+                     "content": part}
                 ]
             )
             responses.append(response['choices'][0]['message']['content'])
@@ -343,7 +372,7 @@ class Code:
 
         try:
             # Use a regex to extract the JSON object from the response
-            match = re.search(r'\{\s*"lines":\s*\[.*\],\s*"new_code":\s*".*"\s*\}', content, re.DOTALL)
+            match = re.search(r'\{\s*"lines":\s*\[.*],\s*"new_code":\s*".*"\s*}', content, re.DOTALL)
             if match:
                 json_str = match.group(0)
                 response_json = json.loads(json_str)
