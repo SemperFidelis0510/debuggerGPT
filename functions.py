@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 import subprocess
 import quart
 from quart import Response
@@ -13,7 +12,6 @@ from pylint import epylint as lint
 import shutil
 from pathlib import Path
 from black import format_file_in_place, Mode, TargetVersion
-import threading
 import time
 import openai
 
@@ -99,55 +97,40 @@ async def analyze_folder(folder_path):
     return file_dict
 
 
-def read_output(shell, output):
+async def read_output(stream, output_list):
     while True:
-        line = shell.stdout.readline().decode()
-        if line == '':
+        line = await stream.readline()
+        if not line:
             break
-        output.append(line)
+        output_list.append(line.decode().rstrip())
 
 
-async def execute_command(command, env_name=None, shell_process=None, new_shell=False):
-    print(f"Executing command: {command}")  # Print the command that's being executed
-
+async def execute_command(command, env_name=None):
     if env_name is not None:
         command = f"conda activate {env_name} && {command}"
-    if shell_process is None:
-        shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
 
-    # Write the command to the process's stdin
-    shell_process.stdin.write(command.encode('utf-8'))
-    shell_process.stdin.write(b'\n')
-    shell_process.stdin.flush()
+    shell_process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
 
-    try:
-        # Read from the process's stdout and stderr
-        stdout = shell_process.stdout.readline().decode('utf-8')
-        stderr = shell_process.stderr.readline().decode('utf-8')
-    except Exception as e:
-        print(f"Exception while reading output: {e}")  # Print any exceptions that are raised
-        stdout = ""
-        stderr = str(e)
+    # Get the output and error from the command
+    stdout, stderr = shell_process.communicate()
 
-    # Split the output into lines
-    stdout_lines = stdout.split('\n')
-    stderr_lines = stderr.split('\n')
+    # Decode the output and error from bytes to strings
+    stdout = stdout.decode('utf-8')
+    stderr = stderr.decode('utf-8')
 
-    if new_shell:
-        # Ignore the first 4 lines of stdout and the first line of stderr
-        stdout_lines = stdout_lines[4:]
-        stderr_lines = stderr_lines[1:]
 
-    # Join the lines back together
-    stdout = '\n'.join(stdout_lines)
-    stderr = '\n'.join(stderr_lines)
+    stdout_lines = stdout.split('\r\n')[4:]
+    stderr_lines = stderr.split('\r\n')
 
-    # Return a dictionary that matches the OpenAPI specification
-    if stderr != '':
-        return Response(response=json.dumps({"error": stderr, "output": stdout}), status=400)
-    else:
-        return Response(response=json.dumps({"output": stdout}), status=200)
+
+    if stderr:
+        return Response(response=json.dumps({"error": stderr_lines, "output": stdout_lines}), status=400)
+    return Response(response=json.dumps({"output": stdout_lines}), status=200)
 
 
 async def run_script(script_path, env_name, args_str):
@@ -221,7 +204,10 @@ async def edit_file(filename, fixes, method):
     if filename.endswith('.py'):
         format_file_in_place(Path(filename), fast=False, mode=mode)
 
-    return Response(response='OK', status=200)
+    with open(filename, 'r') as f:
+        new_content = f.read()
+
+    return Response(response=json.dumps({"content": new_content}), status=200)
 
 
 def remove_ansi_escape_sequences(text):
