@@ -1,5 +1,5 @@
 @echo off
-cd D:\Pandora\debuggerGPT
+cd P:\scripts\debuggerGPT
 call conda activate debuggerGPT
 python main.py
 pause

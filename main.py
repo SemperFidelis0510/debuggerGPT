@@ -18,6 +18,7 @@ memory = Memory()
 instructor = functions.Instructor()
 ok = Response(response='OK', status=200)
 shell_process = None
+new_shell = True
 if shell_process is None:
     shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
@@ -81,7 +82,10 @@ async def execute_command():
         request_data = await request.get_json(force=True)
         command = request_data.get("command", "")
         env_name = request_data.get("env_name", None)
-        return await functions.execute_command(command, env_name, shell_process)
+        if new_shell:
+            return await functions.execute_command(command, env_name, shell_process, True)
+        else:
+            return await functions.execute_command(command, env_name, shell_process)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))

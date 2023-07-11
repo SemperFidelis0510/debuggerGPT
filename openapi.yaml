@@ -375,8 +375,10 @@ components:
       type: object
       properties:
         content:
-          type: string
-          description: The content of the file.
+          type: object
+          additionalProperties:
+            type: string
+          description: The content of the file, with line numbers as keys and lines as values.
     EditFileRequest:
       type: object
       required:
@@ -400,7 +402,7 @@ components:
                 type: string
         method:
           type: string
-          enum: [ replace, insert, new ]
+          enum: [ replace, insert, new, append ]
           default: replace
     initializePluginResponse:
       type: object
