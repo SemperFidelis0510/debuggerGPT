@@ -1,26 +1,85 @@
-Modify Files: The 'edit_file' function is used to modify a file. It takes a file path, a list of changes (or "fixes") to make, and a method for applying the changes. Here's a more detailed breakdown:
-'filename': This is the path to the file you want to modify.
+# Guide for using the 'edit_file' function
 
-'fixes': This is a list of changes you want to make. Each change is represented as a dictionary with the following keys:
+## General Process:
+1. Use `get_file` to read the current state of the code.
+2. Analyze the code and decide on the changes needed.
+3. Use `edit_file` to apply the changes.
+4. Use `execute_command` to run the code and check for errors.
+5. If errors exist, repeat the process until the code is correct.
+6. Check the response of `edit_file` to ensure the changes made are as intended.
 
-'line': This is the line number where you want to make the change. If you want to change a range of lines, provide the start and end line numbers.
-'content': This is the new content you want to insert at the specified line.
-'method': This is how you want to apply the changes. It can be one of the following:
+## edit_file Function:
+The `edit_file` function is used to modify a file. It takes three parameters: `filename`, `fixes`, and `method`.
 
-'replace': This replaces the content at the specified line with the new content.
-'insert': This adds the new content at the specified line, shifting existing lines down.
-'new': This creates a new file with the given name in the path, or overwrites an existing file. Make sure to give the complete content if you use this method.
-Here's an example of how to use 'edit_file':
+- `filename`: The name of the file to be edited.
+- `method`: The method of editing. It can be "replace", "insert", or "new".
+- `fixes`: A list of dictionaries, each containing the lines to be changed and the new code to replace them. Each dictionary can also optionally specify the indentation level for the new code.
 
-To replace line 10 with 'print("Hello, world!")', you would use:
+## Example:
+Let us use an example to demonstrate the use of 'edit_file'. Let's assume you read a code named 'example.py' using 'get_file', and received the output:
 {
-"filename": "path/to/your/file.py",
-"fixes": [
+  "content": {
+    "0": "",
+    "1": "def greet(name):",
+    "2": "    print(f'Hello, {name}!')",
+    "3": "",
+    "4": "",
+    "5": "def farewell(name):",
+    "6": "    print(f'Goodbye, {name}!')",
+    "7": "",
+    "8": "",
+    "9": "greet('Alice')",
+    "10": "farewell('Bob')"
+  }
+}
+
+## Methods:
+1. `replace`: Replaces the specified lines with the new code. This is the most commonly used method and should be used when only a part of the code needs to be changed. 
+
+Example:
 {
-"line": 10,
-"content": 'print("Hello, world!")'
+  "filename": "sample.py",
+  "method": "replace",
+  "fixes": [
+    { "lines": [5, 5], "code": "print(\"Hello, World!\")"}
+  ]
 }
-],
-"method": "replace"
+
+This will replace line 5 with `print("Hello, World!")`.
+
+2. `insert`: Inserts the new code at the specified line. This is useful when you want to add code without removing existing lines. 
+
+Example:
+```json
+{
+  "filename": "sample.py",
+  "fixes": [
+    { "lines": [5, 5], "code": "print(\"Hello, World!\")"}
+  ],
+  "method": "insert"
 }
-Remember to always ask for user permission before making changes to a file.
+```
+This will insert `print("Hello, World!")` at line 5.
+
+3. `new`: Replaces the entire content of the file with the new code. This should only be used when the entire code needs to be rewritten or it's a new code. 
+
+Example:
+```json
+{
+  "filename": "sample.py",
+  "fixes": [
+    { "lines": [1, 1], "code": "print(\"Hello, World!\")"}
+  ],
+  "method": "new"
+}
+```
+This will replace the entire content of the file with `print("Hello, World!")`.
+
+## Important Notes:
+- The `lines` parameter is crucial. It specifies the lines to be changed. The first element is the start line and the second element is the end line. If only one line is to be changed, both elements should be the same.
+- The `indentation` parameter is optional and specifies the indentation level for the new code. It should match the code structure to maintain the integrity of the file.
+- Always check the response of `edit_file` to ensure the changes made are as intended.
+- Be mindful of the token usage. Try to make changes that are as concise as possible to save tokens.
+- Always aim to maintain the integrity of existing files. Only use the 'new' method when absolutely necessary.
+
+Remember, the goal is to make the necessary changes in the least number of actions. This requires a good understanding of the code structure and the problem at hand.

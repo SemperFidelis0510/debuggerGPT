@@ -131,16 +131,6 @@ async def execute_command(command, env_name=None):
     return Response(response=json.dumps({"output": stdout_lines}), status=200)
 
 
-async def run_script(script_path, env_name, args_str):
-    command = f"conda run -n {env_name} python {script_path} {args_str}"  # Include the arguments in the command
-    try:
-        result = subprocess.run(command, shell=True, check=True, text=True, capture_output=True)
-        processed_output = remove_ansi_escape_sequences(result.stdout)
-        return quart.Response(response=json.dumps({"output": processed_output, "error": result.stderr}), status=200)
-    except subprocess.CalledProcessError as e:
-        return quart.Response(response=json.dumps({"error": e.stderr, "output": e.output, "stderr": str(e)}),
-                              status=400)
-
 
 async def get_file(filename):
     if os.path.exists(filename):

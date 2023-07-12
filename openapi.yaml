@@ -29,28 +29,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/executeCommandErrorResponse'
-  /run_script:
-    post:
-      operationId: run_script
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/runScriptRequest'
-      responses:
-        '200':
-          description: Script ran successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/runScriptResponse'
-        '400':
-          description: Error occurred while running script
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/runScriptErrorResponse'
   /files/{filename}:
     get:
       operationId: get_file
@@ -346,38 +324,6 @@ components:
           items:
             type: string
           description: The output of the command before it failed.
-    runScriptRequest:
-      type: object
-      required:
-        - env_name
-        - script_path
-      properties:
-        env_name:
-          type: string
-          description: The name of the environment.
-        script_path:
-          type: string
-          description: The path to the Python script.
-        args:
-          type: array
-          items:
-            type: string
-          description: The list of arguments to pass to the script.
-    runScriptResponse:
-      type: object
-      properties:
-        output:
-          type: string
-          description: The output of the script.
-    runScriptErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message.
-        output:
-          type: string
-          description: The output of the script before it failed.
     getFileResponse:
       type: object
       properties:
@@ -398,25 +344,25 @@ components:
         - fixes
         - method
       properties:
+        method:
+          type: string
+          enum: [ replace, insert, new ]
+          default: replace
         fixes:
           type: array
           items:
             type: object
             properties:
+              code:
+                type: string
               lines:
                 type: array
                 items:
                   type: integer
                 minItems: 1
                 maxItems: 2
-              code:
-                type: string
               indentation:
                 type: string
-        method:
-          type: string
-          enum: [ replace, insert, new, append ]
-          default: replace
     initializePluginResponse:
       type: object
       properties:
