@@ -123,10 +123,8 @@ async def execute_command(command, env_name=None):
     stdout = stdout.decode('utf-8')
     stderr = stderr.decode('utf-8')
 
-
     stdout_lines = stdout.split('\r\n')[4:]
     stderr_lines = stderr.split('\r\n')
-
 
     if stderr:
         return Response(response=json.dumps({"error": stderr_lines, "output": stdout_lines}), status=400)
@@ -195,8 +193,6 @@ async def edit_file(filename, fixes, method):
             lines.insert(start_line - 1, indented_code + '\n')
         elif method == "new":
             lines = [indented_code + '\n']
-        elif method == "append":
-            lines.append(indented_code + '\n')
 
     with open(filename, 'w') as f:
         f.writelines(lines)

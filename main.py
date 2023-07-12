@@ -3,25 +3,18 @@ from quart_cors import cors
 import functions
 import traceback
 from memory import Memory
-from urllib.parse import unquote
 import json
 import os
-import sys
 import subprocess
 import quart
 
 app = Quart(__name__)
 app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
-# app = cors(app, allow_origin="*")
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = functions.Instructor()
-ok = Response(response='OK', status=200)
-shell_process = None
-new_shell = True
-if shell_process is None:
-    shell_process = subprocess.Popen(['cmd.exe'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE)
+# shell_process = None
+# new_shell = True
 
 
 @app.post("/initialize")
@@ -82,10 +75,7 @@ async def execute_command():
         request_data = await request.get_json(force=True)
         command = request_data.get("command", "")
         env_name = request_data.get("env_name", None)
-        if new_shell:
-            return await functions.execute_command(command, env_name, shell_process, True)
-        else:
-            return await functions.execute_command(command, env_name, shell_process)
+        return await functions.execute_command(command, env_name)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
