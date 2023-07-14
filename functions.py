@@ -131,7 +131,6 @@ async def execute_command(command, env_name=None):
     return Response(response=json.dumps({"output": stdout_lines}), status=200)
 
 
-
 async def get_file(filename):
     if os.path.exists(filename):
         with open(filename, 'r') as f:
@@ -165,6 +164,8 @@ async def edit_file(filename, fixes, method):
             start_line, end_line = fix["lines"]
         elif len(fix["lines"]) == 1:
             start_line = end_line = fix["lines"][0]
+        elif len(fix['lines']) > 2:
+            start_line, end_line = fix['lines'][0], fix['lines'][-1]
         elif isinstance(fix["lines"], int):
             start_line = end_line = fix["lines"]
 
@@ -190,8 +191,13 @@ async def edit_file(filename, fixes, method):
     if filename.endswith('.py'):
         format_file_in_place(Path(filename), fast=False, mode=mode)
 
+    new_content = {0: ''}
+    i = 1
     with open(filename, 'r') as f:
-        new_content = f.read()
+        new_content0 = f.readlines()
+    for line in new_content0:
+        new_content[i] = line.replace('\n', '')
+        i += 1
 
     return Response(response=json.dumps({"content": new_content}), status=200)
 

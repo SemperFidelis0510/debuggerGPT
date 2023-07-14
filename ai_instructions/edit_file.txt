@@ -4,9 +4,9 @@
 1. Use `get_file` to read the current state of the code.
 2. Analyze the code and decide on the changes needed.
 3. Use `edit_file` to apply the changes.
-4. Use `execute_command` to run the code and check for errors.
-5. If errors exist, repeat the process until the code is correct.
-6. Check the response of `edit_file` to ensure the changes made are as intended.
+4. Check the response of `edit_file` to ensure the changes made are as intended.
+5. Use `execute_command` to run the code and check for errors.
+6. If errors exist, repeat steps 2-5 until the code is correct. Use the output of step 3 to know the current state of the file.
 
 ## edit_file Function:
 The `edit_file` function is used to modify a file. It takes three parameters: `filename`, `fixes`, and `method`.
@@ -17,6 +17,7 @@ The `edit_file` function is used to modify a file. It takes three parameters: `f
 
 ## Example:
 Let us use an example to demonstrate the use of 'edit_file'. Let's assume you read a code named 'example.py' using 'get_file', and received the output:
+```json
 {
   "content": {
     "0": "",
@@ -32,48 +33,87 @@ Let us use an example to demonstrate the use of 'edit_file'. Let's assume you re
     "10": "farewell('Bob')"
   }
 }
+```
 
 ## Methods:
 1. `replace`: Replaces the specified lines with the new code. This is the most commonly used method and should be used when only a part of the code needs to be changed. 
 
 Example:
+```json
 {
-  "filename": "sample.py",
+  "filename": "example.py",
   "method": "replace",
   "fixes": [
-    { "lines": [5, 5], "code": "print(\"Hello, World!\")"}
+    { "lines": [1, 2], "code": "def greet_nicely(name):\n    print(f'Hello there, {name}!')"},
+    { "lines": [9, 9], "code": "greet_nicely('alice')"}
   ]
 }
-
-This will replace line 5 with `print("Hello, World!")`.
+```
+The resulted file will look like:
+{
+  "content": {
+    "0": "",
+    "1": "def greet(name):",
+    "2": "    print(f'Hello there, {name}!')",
+    "3": "",
+    "4": "",
+    "5": "def farewell(name):",
+    "6": "    print(f'Goodbye, {name}!')",
+    "7": "",
+    "8": "",
+    "9": "greet_nicely('Alice')",
+    "10": "farewell('Bob')"
+  }
+}
 
 2. `insert`: Inserts the new code at the specified line. This is useful when you want to add code without removing existing lines. 
 
 Example:
 ```json
 {
-  "filename": "sample.py",
+  "filename": "example.py",
   "fixes": [
-    { "lines": [5, 5], "code": "print(\"Hello, World!\")"}
+    { "lines": [4, 4], "code": "print(\"This is an inserted line.\")"}
   ],
   "method": "insert"
 }
 ```
-This will insert `print("Hello, World!")` at line 5.
+The resulted file will look like:
+{
+  "content": {
+    "0": "",
+    "1": "def greet(name):",
+    "2": "    print(f'Hello, {name}!')",
+    "3": "    print('How are you today?')",
+    "4": "",
+    "5": "",
+    "6": "def farewell(name):",
+    "7": "    print(f'Goodbye, {name}!')",
+    "8": "",
+    "9": "",
+    "10": "greet('Alice')",
+    "11": "farewell('Bob')"
+  }
+}
 
 3. `new`: Replaces the entire content of the file with the new code. This should only be used when the entire code needs to be rewritten or it's a new code. 
 
 Example:
 ```json
 {
-  "filename": "sample.py",
+  "filename": "example.py",
   "fixes": [
-    { "lines": [1, 1], "code": "print(\"Hello, World!\")"}
+    { "lines": [1, 1], "code": "print(\"This is a completely new code.\")"}
   ],
   "method": "new"
 }
 ```
-This will replace the entire content of the file with `print("Hello, World!")`.
+The resulted file will look like:
+{
+  "content": {
+    "0": "print('This is a completely new code.')"
+  }
+}
 
 ## Important Notes:
 - The `lines` parameter is crucial. It specifies the lines to be changed. The first element is the start line and the second element is the end line. If only one line is to be changed, both elements should be the same.

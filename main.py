@@ -13,13 +13,20 @@ app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = functions.Instructor()
+
+
 # shell_process = None
 # new_shell = True
 
 
+# todo: add info to init
+# todo: add constants to memory
+# todo: add permissions for files
+# todo: probe for standard folders
+# todo: update guides
+
 @app.post("/initialize")
 async def initialize():
-    global shell_process
     request_data = await request.get_json(force=True)
     try:
         env_name = request_data.get("env_name", "debuggerGPT")
