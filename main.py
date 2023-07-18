@@ -1,6 +1,7 @@
 from quart import Quart, request, Response
 from quart_cors import cors
 import functions
+import classes
 import traceback
 from memory import Memory
 import json
@@ -12,7 +13,7 @@ app = Quart(__name__)
 app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
-instructor = functions.Instructor()
+instructor = classes.Instructor()
 
 
 # shell_process = None
@@ -95,7 +96,7 @@ async def remember():
         request_data = await request.get_json(force=True)
         key = request_data.get("key", "")
         value = request_data.get("value", "")
-        nature = request_data.get("nature", 'memory')
+        # nature = request_data.get("nature", 'memory')
         nature = 'memory'
         memory.remember(key, value, nature=nature)
         return Response(response='OK', status=200)
@@ -125,7 +126,10 @@ async def recall(key):
 async def analyze_folder():
     try:
         folder_path = request.args.get("folder_path", "")
-        file_dict = await functions.analyze_folder(folder_path)
+        depth = request.args.get("depth", None)  # Get the depth parameter from the request
+        if depth is not None:
+            depth = int(depth)  # Convert the depth to an integer if it is not None
+        file_dict = await functions.analyze_folder(folder_path, depth)  # Pass the depth to the analyze_folder function
         folder_path = os.path.basename(folder_path)
         memory.remember(folder_path, file_dict, nature='data')
         guidelines = instructor('folder_analysis')
@@ -159,21 +163,6 @@ async def download_file():
         url = request_data.get('url', '')
         local_path = request_data.get('local_path', '')
         return await functions.download_file(url, local_path)
-    except Exception as e:
-        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
-
-
-@app.post("/run_script")
-async def run_script():
-    try:
-        request_data = await request.get_json(force=True)
-        env_name = request_data.get("env_name", "debuggerGPT")
-        script_path = request_data.get("script_path", "")
-        args_str = request_data.get("args_str", "")
-
-        return await functions.run_script(script_path, env_name, args_str)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))

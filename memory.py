@@ -48,8 +48,8 @@ class Memory:
         with open('memory/memory.json', 'r') as f:
             data = json.load(f)
             self.memory = data.get('memory', {})
-            self.aliases = data.get('aliases', {})
-            self.data = data.get('data', {})
+            # self.aliases = data.get('aliases', {})
+            # self.data = data.get('data', {})
 
     def to_json(self):
         return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
