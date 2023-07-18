@@ -34,6 +34,7 @@ pipe:
 - Think of the data that is needed to execute the plan.
 - get data().
 - Execute plan recursively, over the plan Json, and add memory keys at each block, of the plan.
+- make tests
 
 
 

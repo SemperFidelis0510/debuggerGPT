@@ -108,7 +108,8 @@ async def read_output(stream, output_list):
 
 async def execute_command(command, env_name=None):
     if env_name is not None:
-        command = f"conda activate {env_name} && {command}"
+        python_path = f"C:\\Users\\Bar\\.conda\\envs\\{env_name}\\python.exe"
+        command = command.replace("python", python_path)
 
     shell_process = subprocess.Popen(
         command,
@@ -124,7 +125,7 @@ async def execute_command(command, env_name=None):
     stdout = stdout.decode('utf-8')
     stderr = stderr.decode('utf-8')
 
-    stdout_lines = stdout.split('\r\n')[4:]
+    stdout_lines = stdout.split('\r\n')  # Include all lines of output
     stderr_lines = stderr.split('\r\n')
 
     if stderr:
@@ -148,47 +149,31 @@ async def get_file(filename):
         return 404
 
 
-async def edit_file(filename, fixes, method):
-    start_line = end_line = 0
-    if method == "replace" and len(fixes) != 1:
-        return Response(response='Error: For "replace" method, only one fix should be provided', status=400)
-
-    lines = []
-    if method != "new" and os.path.exists(filename):
+async def edit_file(filename, fixes, erase=False):
+    if erase:
+        lines = []
+    elif os.path.exists(filename):
         with open(filename, 'r') as f:
             lines = f.readlines()
-            if lines[-1][-1] != '\n':
+            if lines and lines[-1][-1] != '\n':
                 lines[-1] += '\n'
+    else:
+        return Response(response='Error: File does not exist', status=400)
 
     for fix in fixes:
-        if isinstance(fix["code"], str):
-            fix["code"] = fix["code"].split("\n")
+        start_line = fix["start_line"]
+        new_code = fix["new_code"]
+        replace = fix.get("replace", False)
 
-        if len(fix["lines"]) == 2:
-            start_line, end_line = fix["lines"]
-        elif len(fix["lines"]) == 1:
-            start_line = fix["lines"][0]
-            end_line = start_line + len(fix["code"])
-        elif len(fix['lines']) > 2:
-            start_line, end_line = fix['lines'][0], fix['lines'][-1]
-        elif isinstance(fix["lines"], int):
-            start_line = end_line = fix["lines"]
-
-        new_code = fix["code"]
-        if "indentation" in fix:
-            indentation = fix["indentation"]
-        else:
-            indentation = ''
+        indentation = fix.get("indentation", '')
         indented_code = '\n'.join([indentation + line for line in new_code.split('\n')])
 
-        if method == "replace":
-            if end_line > len(lines):
-                lines.extend(['\n'] * (end_line - len(lines)))
-            lines[start_line - 1:end_line] = [indented_code + '\n']
-        elif method == "insert":
+        if replace:
+            if start_line > len(lines):
+                lines.extend(['\n'] * (start_line - len(lines)))
+            lines[start_line - 1] = indented_code + '\n'
+        else:
             lines.insert(start_line - 1, indented_code + '\n')
-        elif method == "new":
-            lines = [indented_code + '\n']
 
     with open(filename, 'w') as f:
         f.writelines(lines)

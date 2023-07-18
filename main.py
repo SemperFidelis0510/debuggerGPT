@@ -8,12 +8,15 @@ import json
 import os
 import subprocess
 import quart
+from fastapi import HTTPException
+import logging
 
 app = Quart(__name__)
 app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = classes.Instructor()
+logger = logging.getLogger(__name__)
 
 
 # shell_process = None
@@ -69,8 +72,21 @@ async def edit_file(filename):
     try:
         request_data = await request.get_json(force=True)
         fixes = request_data.get("fixes", [])
-        method = request_data.get("method", "replace")
-        return await functions.edit_file(filename, fixes, method)
+        erase = request_data.get("erase", False)
+        return await functions.edit_file(filename, fixes, erase)
+    except Exception as e:
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        print("".join(tb_str))
+        return Response(response="".join(tb_str), status=500)
+
+
+@app.put("/files/<path:filename>")
+async def download_file(filename):
+    try:
+        request_data = await request.get_json(force=True)
+        url = request_data.get('url', '')
+        local_path = os.path.join(request_data.get('local_path', ''), filename)
+        return await functions.download_file(url, local_path)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
@@ -83,27 +99,27 @@ async def execute_command():
         request_data = await request.get_json(force=True)
         command = request_data.get("command", "")
         env_name = request_data.get("env_name", None)
+
+        # Input validation
+        if not command or not isinstance(command, str):
+            raise HTTPException(status_code=400, detail="Invalid command")
+        if env_name is not None and not isinstance(env_name, str):
+            raise HTTPException(status_code=400, detail="Invalid environment name")
+
         return await functions.execute_command(command, env_name)
+    except HTTPException as e:
+        # Return user-friendly error messages
+        return Response(response=e.detail, status=e.status_code)
     except Exception as e:
+        # Log the error
+        logger.error(f"An error occurred while executing the command: {e}")
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
+        logger.debug("".join(tb_str))  # Log the traceback at the debug level
 
-
-@app.route("/memory", methods=["POST"])
-async def remember():
-    try:
-        request_data = await request.get_json(force=True)
-        key = request_data.get("key", "")
-        value = request_data.get("value", "")
-        # nature = request_data.get("nature", 'memory')
-        nature = 'memory'
-        memory.remember(key, value, nature=nature)
-        return Response(response='OK', status=200)
-    except Exception as e:
-        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
+        # Return a generic error message
+        return Response(
+            response="An error occurred while executing the command. Please check the logs for more details.",
+            status=500)
 
 
 @app.route("/memory/<key>", methods=["GET"])
@@ -116,6 +132,20 @@ async def recall(key):
             return Response(response=json.dumps({"value": memory[key]}), status=200)
         else:
             return Response(response='Key not found', status=400)
+    except Exception as e:
+        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
+        print("".join(tb_str))
+        return Response(response="".join(tb_str), status=500)
+
+
+@app.route("/memory/<key>", methods=["POST"])
+async def remember(key):
+    try:
+        request_data = await request.get_json(force=True)
+        value = request_data.get("value", "")
+        nature = 'memory'
+        memory.remember(key, value, nature=nature)
+        return Response(response='OK', status=200)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
@@ -150,19 +180,6 @@ async def analyze_code():
         code_analysis = await functions.analyze_code(code_path, scope_level)
         return Response(response=json.dumps({"analysis": code_analysis, "guidelines": instructor('code_analysis')}),
                         status=200)
-    except Exception as e:
-        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
-
-
-@app.post('/download_file')
-async def download_file():
-    try:
-        request_data = await request.get_json(force=True)
-        url = request_data.get('url', '')
-        local_path = request_data.get('local_path', '')
-        return await functions.download_file(url, local_path)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))

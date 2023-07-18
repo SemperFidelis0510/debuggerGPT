@@ -11,3 +11,4 @@ black
 pathspec
 packaging
 openai
+fastapi
