@@ -186,26 +186,6 @@ async def analyze_code():
         return Response(response="".join(tb_str), status=500)
 
 
-@app.post('/create_plugin')
-async def create_plugin():
-    guidelines = None
-    try:
-        request_data = await request.get_json(force=True)
-        destination_path = request_data.get('path', 'codes')
-        if not instructor.passed('plugins'):
-            guidelines = instructor('plugins')
-            destination_path = await functions.create_plugin(destination_path)
-            guidelines.replace('{destination_path}', destination_path)
-        else:
-            guidelines = instructor('plugins')
-        return Response(response=json.dumps({'guidelines': guidelines}),
-                        status=200)
-    except Exception as e:
-        tb_str = traceback.format_exception(type(e), e, e.__traceback__)
-        print("".join(tb_str))
-        return Response(response="".join(tb_str), status=500)
-
-
 @app.get("/logo.png")
 async def plugin_logo():
     filename = 'logo.png'
