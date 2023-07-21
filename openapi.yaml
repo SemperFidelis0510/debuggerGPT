@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Debug Plugin
-  description: A plugin that allows ChatGPT to access and modify files on your computer for debugging purposes.
+  description: A versatile plugin that empowers ChatGPT to access, modify, and analyze files on your computer, execute shell commands, and manage Python environments for debugging and development purposes. This plugin is designed to be proactive, independent, and persistent, always striving to provide the most effective and creative solutions.
   version: 'v1'
 servers:
   - url: http://localhost:5003
@@ -155,15 +155,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/rememberRequest'
-      responses:
-        '200':
-          description: Memory updated successfully
 
   /analysis/code:
     get:
