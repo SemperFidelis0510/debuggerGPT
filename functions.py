@@ -150,6 +150,9 @@ async def get_file(filename):
 
 
 async def edit_file(filename, fixes, erase=False):
+    dir_name = os.path.dirname(filename)
+    if dir_name and not os.path.exists(dir_name):
+        os.makedirs(dir_name, exist_ok=True)
     if erase:
         lines = []
     elif os.path.exists(filename):
@@ -162,6 +165,7 @@ async def edit_file(filename, fixes, erase=False):
 
     for fix in fixes:
         start_line = fix["start_line"]
+        end_line = fix.get("end_line", None)
         new_code = fix["new_code"]
         replace = fix.get("replace", False)
 
@@ -171,7 +175,10 @@ async def edit_file(filename, fixes, erase=False):
         if replace:
             if start_line > len(lines):
                 lines.extend(['\n'] * (start_line - len(lines)))
-            lines[start_line - 1] = indented_code + '\n'
+            if end_line is not None and end_line < len(lines):
+                lines = lines[:start_line - 1] + [indented_code + '\n'] + lines[end_line:]
+            else:
+                lines[start_line - 1] = indented_code + '\n'
         else:
             lines.insert(start_line - 1, indented_code + '\n')
 

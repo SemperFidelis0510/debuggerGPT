@@ -1,0 +1,17 @@
+{
+"Plan": [
+"1. Python Voice Recording: Use a Python library like SpeechRecognition to continuously record audio from the microphone.",
+"2. Voice to Text Translation: Instead of using the recognize_google function from the SpeechRecognition library, we'll use Windows 11's voice access feature to transcribe the recorded audio into text. This will require an AutoHotkey script.",
+"3. AutoHotkey Script: Write an AutoHotkey script that continuously captures the output of Windows 11's voice access. This might involve using the ControlGetText command to get the text from the voice access window.",
+"4. Inter-process Communication: Use a method of inter-process communication (IPC) to send the captured text from the AutoHotkey script to the Python script. This could be done using a named pipe, a socket, or a file.",
+"5. Python IPC Handler: Write a function in the Python script that reads the text sent by the AutoHotkey script and processes it as if it were transcribed by the SpeechRecognition library.",
+"6. Keyword Extraction: Check the beginning of the transcribed text for a keyword that matches one of the keys in your dictionary.",
+"7. Function Execution: If a keyword is found, use the exec function to execute the corresponding Python function. The argument to the function should be the rest of the transcribed text, excluding the keyword.",
+"8. Adding New Pairs to the Dictionary: Write a function that adds new keyword-function pairs to the dictionary. The function should take two arguments: the keyword and the function name.",
+"9. Creating New Python Functions: Write a function that creates a new Python function from a string. The function should use the exec function to define the new function.",
+"10. Integration: Integrate the Python and AutoHotkey scripts so that they work together. This might involve starting the AutoHotkey script from the Python script, or vice versa.",
+"11. Continuous Operation: Ensure that the system operates continuously, listening for voice commands, transcribing them, and executing the corresponding functions.",
+"12. Error Handling: Implement error handling to ensure that the system can recover from potential issues, such as network errors during voice transcription or syntax errors in the dynamically created Python functions.",
+"13. Testing and Debugging: Test the system thoroughly to ensure that it works as expected. Debug any issues that arise."
+]
+}

@@ -31,9 +31,8 @@ logger = logging.getLogger(__name__)
 
 @app.post("/initialize")
 async def initialize():
-    request_data = await request.get_json(force=True)
     try:
-        env_name = request_data.get("env_name", "debuggerGPT")
+        env_name = "debuggerGPT"
         memory['environ'] = env_name
         memory['w_dir'] = os.getcwd()
 
@@ -73,6 +72,9 @@ async def edit_file(filename):
         request_data = await request.get_json(force=True)
         fixes = request_data.get("fixes", [])
         erase = request_data.get("erase", False)
+        for fix in fixes:
+            if "end_line" in fix:
+                fix["end_line"] = int(fix["end_line"])
         return await functions.edit_file(filename, fixes, erase)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)

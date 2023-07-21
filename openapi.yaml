@@ -237,10 +237,7 @@ components:
     # Initialization schemas
     initializePluginRequest:
       type: object
-      properties:
-        env_name:
-          type: string
-          description: The name of the environment to create or use. By default use 'debuggerGPT'.
+      properties: { }
     initializePluginResponse:
       type: object
       properties:
@@ -320,6 +317,9 @@ components:
               start_line:
                 type: integer
                 description: The line at which to start writing the new code in the old code.
+              end_line:
+                type: integer
+                description: The line at which to stop replacing the old code. If not provided, only the line at 'start_line' will be replaced.
               new_code:
                 type: string
                 description: The new code to write.
