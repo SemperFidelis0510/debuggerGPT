@@ -1,0 +1,6 @@
+init
+
+Then, I want you to help me improve and debug the chatGPT plugin 'debugger', you are using, which I created.
+The code of the plugin is located in the folder: P:\Scripts\debuggerGPT. Please inspect this folder.
+The main files of the project, which you need first to inspect, are 'main.py', 'functions.py' and 'openapi.yaml'.
+Do not output the codes, just read their content.

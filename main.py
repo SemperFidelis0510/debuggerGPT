@@ -1,6 +1,6 @@
 from quart import Quart, request, Response
 from quart_cors import cors
-import functions
+from functions import *
 import classes
 import traceback
 from memory import Memory
@@ -30,13 +30,13 @@ logger = logging.getLogger(__name__)
 # todo: update guides
 
 @app.post("/initialize")
-async def initialize():
+async def initialize_route():
     try:
         env_name = "debuggerGPT"
         memory['environ'] = env_name
         memory['w_dir'] = os.getcwd()
 
-        await functions.initialize_plugin(env_name)
+        await initialize_plugin(env_name)
 
         response = {
             "message": "Initialization successful. The conda environment '" + env_name + "' is ready to use.",
@@ -51,9 +51,9 @@ async def initialize():
 
 
 @app.get("/files/<path:filename>")
-async def get_file(filename):
+async def get_file_route(filename: str, num_lines: int = 250, start_line: int = 0):
     try:
-        content = await functions.get_file(filename)
+        content = await get_file(filename, num_lines, start_line)
         if content == 404:
             return Response(response='File not found', status=404)
         else:
@@ -65,9 +65,7 @@ async def get_file(filename):
 
 
 @app.post("/files/<path:filename>")
-async def edit_file(filename):
-    # if not instructor.passed('edit_file'):
-    #     return Response(response=instructor('edit_file'), status=200)
+async def write_file_route(filename):
     try:
         request_data = await request.get_json(force=True)
         fixes = request_data.get("fixes", [])
@@ -75,7 +73,7 @@ async def edit_file(filename):
         for fix in fixes:
             if "end_line" in fix:
                 fix["end_line"] = int(fix["end_line"])
-        return await functions.edit_file(filename, fixes, erase)
+        return await write_file(filename, fixes, erase)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
@@ -83,12 +81,12 @@ async def edit_file(filename):
 
 
 @app.put("/files/<path:filename>")
-async def download_file(filename):
+async def download_file_route(filename):
     try:
         request_data = await request.get_json(force=True)
         url = request_data.get('url', '')
         local_path = os.path.join(request_data.get('local_path', ''), filename)
-        return await functions.download_file(url, local_path)
+        return await download_file(url, local_path)
     except Exception as e:
         tb_str = traceback.format_exception(type(e), e, e.__traceback__)
         print("".join(tb_str))
@@ -96,7 +94,7 @@ async def download_file(filename):
 
 
 @app.post("/execute")
-async def execute_command():
+async def execute_command_route():
     try:
         request_data = await request.get_json(force=True)
         command = request_data.get("command", "")
@@ -108,7 +106,7 @@ async def execute_command():
         if env_name is not None and not isinstance(env_name, str):
             raise HTTPException(status_code=400, detail="Invalid environment name")
 
-        return await functions.execute_command(command, env_name)
+        return await execute_command(command, env_name)
     except HTTPException as e:
         # Return user-friendly error messages
         return Response(response=e.detail, status=e.status_code)
@@ -125,7 +123,7 @@ async def execute_command():
 
 
 @app.route("/memory/<key>", methods=["GET"])
-async def recall(key):
+async def recall_route(key):
     try:
         All = request.args.get("all", "False").lower() == "true"
         if All:
@@ -141,7 +139,7 @@ async def recall(key):
 
 
 @app.route("/memory/<key>", methods=["POST"])
-async def remember(key):
+async def remember_route(key):
     try:
         request_data = await request.get_json(force=True)
         value = request_data.get("value", "")
@@ -155,13 +153,13 @@ async def remember(key):
 
 
 @app.get("/analysis/folder")
-async def analyze_folder():
+async def analyze_folder_route():
     try:
         folder_path = request.args.get("folder_path", "")
         depth = request.args.get("depth", None)  # Get the depth parameter from the request
         if depth is not None:
             depth = int(depth)  # Convert the depth to an integer if it is not None
-        file_dict = await functions.analyze_folder(folder_path, depth)  # Pass the depth to the analyze_folder function
+        file_dict = await analyze_folder(folder_path, depth)  # Pass the depth to the analyze_folder function
         folder_path = os.path.basename(folder_path)
         memory.remember(folder_path, file_dict, nature='data')
         guidelines = instructor('folder_analysis')
@@ -175,11 +173,11 @@ async def analyze_folder():
 
 
 @app.get("/analysis/code")
-async def analyze_code():
+async def analyze_code_route():
     try:
         code_path = request.args.get("code_path", "")
         scope_level = int(request.args.get("scope_level", "2"))
-        code_analysis = await functions.analyze_code(code_path, scope_level)
+        code_analysis = await analyze_code(code_path, scope_level)
         return Response(response=json.dumps({"analysis": code_analysis, "guidelines": instructor('code_analysis')}),
                         status=200)
     except Exception as e:
@@ -194,12 +192,15 @@ async def plugin_logo():
     return await quart.send_file(filename, mimetype='image/png')
 
 
-@app.get("/.well-known/ai-plugin.json")
-async def plugin_manifest():
-    host = request.headers['Host']
-    with open("./.well-known/ai-plugin.json") as f:
-        text = f.read()
-        return Response(text, mimetype="text/json")
+@app.route("/.well-known/ai-plugin.json", methods=['OPTIONS'])
+async def options_manifest():
+    print("OPTIONS request received for /.well-known/ai-plugin.json")
+    print(f"Request headers: {request.headers}")
+    response = Response(response='', status=200)
+    response.headers['Access-Control-Allow-Origin'] = "https://chat.openai.com"
+    response.headers['Access-Control-Allow-Headers'] = 'content-type,openai-conversation-id,openai-ephemeral-user-id'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'
+    return response
 
 
 @app.get("/openapi.yaml")
@@ -215,16 +216,6 @@ async def after_request(response):
     response.headers['Access-Control-Allow-Origin'] = 'https://chat.openai.com'
     response.headers['Access-Control-Allow-Headers'] = '*'
     response.headers['Access-Control-Allow-Methods'] = '*'
-    return response
-
-
-@app.route("/files/<path:filename>", methods=['OPTIONS'])
-async def options_files(filename):
-    response = Response(response='', status=200)
-    response.headers['Access-Control-Allow-Origin'] = "https://chat.openai.com"
-    response.headers['Access-Control-Allow-Headers'] = 'content-type,openai-conversation-id,openai-ephemeral-user-id'
-    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'
-    return response
 
 
 def main():

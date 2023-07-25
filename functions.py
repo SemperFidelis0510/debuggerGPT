@@ -111,32 +111,35 @@ async def execute_command(command, env_name=None):
         python_path = f"C:\\Users\\Bar\\.conda\\envs\\{env_name}\\python.exe"
         command = command.replace("python", python_path)
 
-    shell_process = subprocess.Popen(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    try:
+        shell_process = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
 
-    # Get the output and error from the command
-    stdout, stderr = shell_process.communicate()
+        # Get the output and error from the command, with a timeout
+        stdout, stderr = shell_process.communicate(timeout=60)
 
-    # Decode the output and error from bytes to strings
-    stdout = stdout.decode('utf-8')
-    stderr = stderr.decode('utf-8')
+        stdout_lines = stdout.split('\n')  # Include all lines of output
+        stderr_lines = stderr.split('\n')
 
-    stdout_lines = stdout.split('\r\n')  # Include all lines of output
-    stderr_lines = stderr.split('\r\n')
+        if stderr:
+            return Response(response=json.dumps({"output": stdout_lines, "error": stderr_lines}), status=400)
+        return Response(response=json.dumps({"output": stdout_lines, "error": stderr_lines}), status=200)
 
-    if stderr:
-        return Response(response=json.dumps({"error": stderr_lines, "output": stdout_lines}), status=400)
-    return Response(response=json.dumps({"output": stdout_lines}), status=200)
+    except subprocess.TimeoutExpired:
+        return Response(response=json.dumps({"error": "Command timed out"}), status=500)
+    except Exception as e:
+        return Response(response=json.dumps({"error": str(e)}), status=500)
 
 
-async def get_file(filename):
+async def get_file(filename, num_lines=250, start_line=0):
     if os.path.exists(filename):
         with open(filename, 'r') as f:
-            raw_content = f.readlines()
+            raw_content = f.readlines()[start_line:start_line+num_lines]
 
         content = {0: ''}
         i = 1
@@ -144,12 +147,15 @@ async def get_file(filename):
             content[i] = line.replace('\n', '')
             i += 1
 
+        if len(raw_content) == num_lines:
+            content['more'] = 'More lines available. Call function again with start_line=' + str(start_line+num_lines)
+
         return content
     else:
         return 404
 
 
-async def edit_file(filename, fixes, erase=False):
+async def write_file(filename, fixes, erase=False):
     dir_name = os.path.dirname(filename)
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name, exist_ok=True)
@@ -178,7 +184,7 @@ async def edit_file(filename, fixes, erase=False):
             if end_line is not None and end_line < len(lines):
                 lines = lines[:start_line - 1] + [indented_code + '\n'] + lines[end_line:]
             else:
-                lines[start_line - 1] = indented_code + '\n'
+                lines = lines[:start_line - 1] + [indented_code + '\n'] + lines[start_line:]
         else:
             lines.insert(start_line - 1, indented_code + '\n')
 

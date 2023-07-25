@@ -6,7 +6,6 @@ info:
 servers:
   - url: http://localhost:5003
 
-
 paths:
   /initialize:
     post:
@@ -30,7 +29,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/initializePluginErrorResponse'
-
   /execute:
     post:
       operationId: execute_command
@@ -53,7 +51,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/executeCommandErrorResponse'
-
   /files/{filename}:
     get:
       operationId: get_file
@@ -123,7 +120,6 @@ paths:
       responses:
         '200':
           description: File downloaded successfully
-
   /memory/{key}:
     get:
       operationId: recall
@@ -155,7 +151,6 @@ paths:
           required: true
           schema:
             type: string
-
   /analysis/code:
     get:
       operationId: analyze_code
@@ -188,7 +183,6 @@ paths:
                 properties:
                   error:
                     type: string
-
   /analysis/folder:
     get:
       operationId: analyze_folder
@@ -221,7 +215,6 @@ paths:
                 properties:
                   error:
                     type: string
-
 
 components:
   schemas:
@@ -265,19 +258,24 @@ components:
           items:
             type: string
           description: The output of the command.
-    executeCommandErrorResponse:
-      type: object
-      properties:
         error:
           type: array
           items:
             type: string
-          description: The error message.
+          description: Any error that might have occurred during running.
+    executeCommandErrorResponse:
+      type: object
+      properties:
         output:
           type: array
           items:
             type: string
           description: The output of the command before it failed.
+        error:
+          type: array
+          items:
+            type: string
+          description: The error message.
 
     # File operation schemas
     getFileResponse:
@@ -288,6 +286,9 @@ components:
           additionalProperties:
             type: string
           description: The content of the file, with line numbers as keys and lines as values.
+        more:
+          type: string
+          description: Indicates if more lines are available and provides the start line for the next request.
     editFileRequest:
       type: object
       required:
