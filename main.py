@@ -203,6 +203,14 @@ async def options_manifest():
     return response
 
 
+@app.get("/.well-known/ai-plugin.json")
+async def plugin_manifest():
+    host = request.headers['Host']
+    with open("./.well-known/ai-plugin.json") as f:
+        text = f.read()
+        return Response(text, mimetype="text/json")
+
+
 @app.get("/openapi.yaml")
 async def openapi_spec():
     host = request.headers['Host']
@@ -213,9 +221,22 @@ async def openapi_spec():
 
 @app.after_request
 async def after_request(response):
-    response.headers['Access-Control-Allow-Origin'] = 'https://chat.openai.com'
-    response.headers['Access-Control-Allow-Headers'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = '*'
+    if response is not None:
+        response.headers['Access-Control-Allow-Origin'] = 'https://chat.openai.com'
+        response.headers['Access-Control-Allow-Headers'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = '*'
+    return response
+
+
+@app.route("/files/<path:filename>", methods=['OPTIONS'])
+async def options_file_route(filename):
+    print(f"OPTIONS request received for /files/{filename}")
+    print(f"Request headers: {request.headers}")
+    response = Response(response='', status=200)
+    response.headers['Access-Control-Allow-Origin'] = "https://chat.openai.com"
+    response.headers['Access-Control-Allow-Headers'] = 'content-type,openai-conversation-id,openai-ephemeral-user-id'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'
+    return response
 
 
 def main():
