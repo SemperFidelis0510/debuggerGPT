@@ -25,26 +25,6 @@ logger = logging.getLogger(__name__)
 # todo: probe for standard folders
 # todo: update guides
 
-@app.post("/initialize")
-async def initialize_route():
-    try:
-        env_name = "debuggerGPT"
-        memory['environ'] = env_name
-        memory['w_dir'] = os.getcwd()
-
-        await initialize_plugin(env_name)
-
-        response = {
-            "message": "Initialization successful. The conda environment '" + env_name + "' is ready to use.",
-            "guidelines": instructor('init')
-        }
-        return Response(response=json.dumps(response), status=200)
-    except subprocess.CalledProcessError as e:
-        error_response = {
-            "error": str(e)
-        }
-        return Response(response=json.dumps(error_response), status=400, mimetype='application/json')
-
 
 @app.get("/files/<path:filename>")
 async def get_file_route(filename: str):

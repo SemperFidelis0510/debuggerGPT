@@ -7,28 +7,6 @@ servers:
   - url: http://localhost:5003
 
 paths:
-  /initialize:
-    post:
-      operationId: initialize_plugin
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/initializePluginRequest'
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/initializePluginResponse'
-        '400':
-          description: Error during initialization
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/initializePluginErrorResponse'
   /execute:
     post:
       operationId: execute_command
@@ -218,26 +196,6 @@ paths:
 
 components:
   schemas:
-    # Initialization schemas
-    initializePluginRequest:
-      type: object
-      properties: { }
-    initializePluginResponse:
-      type: object
-      properties:
-        message:
-          type: string
-          description: The status of the initialization.
-        guidelines:
-          type: string
-          description: Detailed guidelines on how to use the plugin.
-    initializePluginErrorResponse:
-      type: object
-      properties:
-        error:
-          type: string
-          description: The error message.
-
     # Execution schemas
     executeCommandRequest:
       type: object
