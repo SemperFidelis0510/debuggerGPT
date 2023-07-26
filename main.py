@@ -1,4 +1,4 @@
-from quart import Quart, request, Response
+from quart import Quart, request
 from quart_cors import cors
 from functions import *
 import classes
@@ -12,15 +12,11 @@ from fastapi import HTTPException
 import logging
 
 app = Quart(__name__)
-app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233"])
+app = cors(app, allow_origin=["https://chat.openai.com", "192.168.1.233", "192.168.1.113"])
 explained = {'code_analysis': False, 'plan': False, 'init': False}
 memory = Memory()
 instructor = classes.Instructor()
 logger = logging.getLogger(__name__)
-
-
-# shell_process = None
-# new_shell = True
 
 
 # todo: add info to init
@@ -51,8 +47,11 @@ async def initialize_route():
 
 
 @app.get("/files/<path:filename>")
-async def get_file_route(filename: str, num_lines: int = 250, start_line: int = 0):
+async def get_file_route(filename: str):
     try:
+        request_data = await request.get_json(force=True)
+        num_lines = request_data.get("num_lines", 250)
+        start_line = request_data.get("start_line", 0)
         content = await get_file(filename, num_lines, start_line)
         if content == 404:
             return Response(response='File not found', status=404)
@@ -192,28 +191,39 @@ async def plugin_logo():
     return await quart.send_file(filename, mimetype='image/png')
 
 
-@app.route("/.well-known/ai-plugin.json", methods=['OPTIONS'])
+@app.route("/.well-known/ai-plugin.json", methods=['GET', 'POST', 'OPTIONS'])
 async def options_manifest():
-    print("OPTIONS request received for /.well-known/ai-plugin.json")
-    print(f"Request headers: {request.headers}")
-    response = Response(response='', status=200)
-    response.headers['Access-Control-Allow-Origin'] = "https://chat.openai.com"
+    if request.method == 'OPTIONS':
+        print("OPTIONS request received for /.well-known/ai-plugin.json")
+        print(f"Request headers: {request.headers}")
+        response = Response(response='', status=204)
+    elif request.method == 'GET':
+        with open("./.well-known/ai-plugin.json") as f:
+            text = f.read()
+            response = Response(text, mimetype="text/json")
+    else:
+        response = Response(response='', status=200)
+
+    # List of allowed origins
+    allowed_origins = ["https://chat.openai.com", "http://192.168.1.233", "http://192.168.1.113"]
+
+    # Get the Origin header of the incoming request
+    origin = request.headers.get('Origin')
+
+    # If the Origin is in the list of allowed origins, set the Access-Control-Allow-Origin header
+    # to the value of the Origin header
+    if origin in allowed_origins:
+        response.headers['Access-Control-Allow-Origin'] = origin
+    else:
+        response.headers['Access-Control-Allow-Origin'] = "https://chat.openai.com"
+
     response.headers['Access-Control-Allow-Headers'] = 'content-type,openai-conversation-id,openai-ephemeral-user-id'
     response.headers['Access-Control-Allow-Methods'] = 'GET,POST'
     return response
 
 
-@app.get("/.well-known/ai-plugin.json")
-async def plugin_manifest():
-    host = request.headers['Host']
-    with open("./.well-known/ai-plugin.json") as f:
-        text = f.read()
-        return Response(text, mimetype="text/json")
-
-
 @app.get("/openapi.yaml")
 async def openapi_spec():
-    host = request.headers['Host']
     with open("openapi.yaml") as f:
         text = f.read()
         return Response(text, mimetype="text/yaml")
@@ -237,6 +247,13 @@ async def options_file_route(filename):
     response.headers['Access-Control-Allow-Headers'] = 'content-type,openai-conversation-id,openai-ephemeral-user-id'
     response.headers['Access-Control-Allow-Methods'] = 'GET,POST'
     return response
+
+
+@app.route('/', methods=['GET', 'POST', 'OPTIONS'])
+async def handle_request():
+    if request.method == 'OPTIONS':
+        print(f"OPTIONS request received. Headers: {dict(request.headers)}")
+    return '', 200
 
 
 def main():
