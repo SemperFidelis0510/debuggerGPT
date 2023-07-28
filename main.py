@@ -27,9 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 @app.get("/files/<path:filename>")
-async def get_file_route(filename: str):
+async def get_file_route(filename):
     try:
-        request_data = await request.get_json(force=True)
+        request_data = await request.get_data()
+        if request_data:
+            request_data = await request.get_json()
+        else:
+            request_data = {}
         num_lines = request_data.get("num_lines", 250)
         start_line = request_data.get("start_line", 0)
         content = await get_file(filename, num_lines, start_line)

@@ -3,12 +3,9 @@ import sys
 
 
 def docx_to_txt(path):
-    try:
-        document = Document(path)
-        result = [p.text for p in document.paragraphs]
-        return '\n'.join(result)
-    except Exception as e:
-        return str(e)
+    document = Document(path)
+    result = [p.text for p in document.paragraphs]
+    return '\n'.join(result)
 
 
 if __name__ == '__main__':

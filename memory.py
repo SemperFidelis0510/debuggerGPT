@@ -4,55 +4,43 @@ import os
 
 class Memory:
     def __init__(self):
-        self.memory = {}
-        self.aliases = {}
-        self.data = {}
-
-    def __str__(self):
-        return self.to_json()
-
-    def __repr__(self):
-        return {'memory': self.memory, 'aliases': self.aliases, 'data': self.data}
-
-    def __getitem__(self, key):
-        return self.recall(key)
-
-    def __setitem__(self, key, value):
-        self.remember(key, value)
-        self.cache()
-
-    def __contains__(self, key):
-        return (key in self.memory) or (key in self.aliases) or (key in self.data)
-
-    def remember(self, key, value, nature='memory'):
-        if nature == 'memory':
-            self.memory[key] = value
-        elif nature == 'alias':
-            self.aliases[key] = value
-        elif nature == 'data':
-            self.data[key] = value
-
-    def recall(self, key):
-        if key in self.memory:
-            return self.memory[key]
-        elif key in self.aliases:
-            return self.aliases[key]
-        elif key in self.data:
-            return self.data[key]
-
-    def cache(self):
-        with open('memory/memory.json', 'w') as f:
-            json.dump({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, f)
+        self.load()
 
     def load(self):
-        with open('memory/memory.json', 'r') as f:
-            data = json.load(f)
-            self.memory = data.get('memory', {})
-            # self.aliases = data.get('aliases', {})
-            # self.data = data.get('data', {})
+        files = os.listdir('memory')
+        for file in files:
+            if file.endswith('.json'):
+                with open(f'memory/{file}', 'r') as f:
+                    if os.stat(f'memory/{file}').st_size != 0:
+                        setattr(self, file[:-5], json.load(f))
+                    else:
+                        setattr(self, file[:-5], {})
+                if os.stat(f'memory/{file}').st_size == 0:
+                    with open(f'memory/{file}', 'w') as f:
+                        json.dump({}, f)
+
+    def cache(self):
+        files = os.listdir('memory')
+        for file in files:
+            if file.endswith('.json'):
+                with open(f'memory/{file}', 'w') as f:
+                    json.dump(getattr(self, file[:-5]), f)
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __contains__(self, key):
+        return key in self.__dict__
+
+    def __getitem__(self, key):
+        return self.__dict__.get(key)
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+        self.cache()
 
     def to_json(self):
-        return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
+        return json.dumps(self.__dict__, indent=4)
 
 
 class Plan:
@@ -65,20 +53,3 @@ class Plan:
 
     def reason(self):
         pass
-
-    def cache(self):
-        with open('memory/memory.json', 'w') as f:
-            json.dump({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, f)
-
-    def load(self):
-        with open('memory/memory.json', 'r') as f:
-            data = json.load(f)
-            self.memory = data.get('memory', {})
-            self.aliases = data.get('aliases', {})
-            self.data = data.get('data', {})
-
-    def to_json(self):
-        return json.dumps({'memory': self.memory, 'aliases': self.aliases, 'data': self.data}, indent=4)
-
-
-

@@ -38,6 +38,11 @@ paths:
           required: true
           schema:
             type: string
+        - name: params
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/getFileRequest'
       responses:
         '200':
           description: File content retrieved successfully
@@ -236,6 +241,17 @@ components:
           description: The error message.
 
     # File operation schemas
+    getFileRequest:
+      type: object
+      properties:
+        num_lines:
+          type: integer
+          default: 250
+          description: The number of lines to retrieve from the file.
+        start_line:
+          type: integer
+          default: 0
+          description: The line number to start retrieving from.
     getFileResponse:
       type: object
       properties:
